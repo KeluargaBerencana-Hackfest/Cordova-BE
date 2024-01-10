@@ -4,11 +4,12 @@ import (
 	"net/http"
 	"strings"
 
+	"firebase.google.com/go/v4/auth"
 	"github.com/Ndraaa15/cordova/utils/jwt"
 	"github.com/gin-gonic/gin"
 )
 
-func ValidateJWTToken() gin.HandlerFunc {
+func ValidateJWTToken(client *auth.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		header := ctx.Request.Header.Get("Authorization")
 
@@ -25,17 +26,13 @@ func ValidateJWTToken() gin.HandlerFunc {
 
 		tokenString := tokenParts[1]
 
-		claims, err := jwt.DecodeToken(tokenString)
+		claims, err := jwt.DecodeToken(client, tokenString)
 		if err != nil {
 			ctx.AbortWithError(http.StatusUnauthorized, err)
 			return
 		}
 
-		userID, ok := claims["id"].(string)
-		if !ok {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-			return
-		}
+		userID := claims.UID
 
 		ctx.Set("user", userID)
 		ctx.Next()

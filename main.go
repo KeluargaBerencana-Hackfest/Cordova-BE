@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("./.env"); err != nil {
 		log.Printf("[cordova-main] failed to load .env file. Error : %v\n", err)
 		return
 	}
@@ -22,5 +22,6 @@ func main() {
 		defer wg.Done()
 		os.Exit(app.RunServer())
 	}()
+
 	wg.Wait()
 }
