@@ -48,10 +48,10 @@ func NewServer() (*Server, error) {
 		return nil, err
 	}
 
-	// if err := db.MigrateDatabase(); err != nil {
-	// 	log.Printf("[cordova-server] failed to migrate schema to postgres database. Error : %v\n", err)
-	// 	return nil, err
-	// }
+	if err := db.MigrateDatabase(); err != nil {
+		log.Printf("[cordova-server] failed to migrate schema to postgres database. Error : %v\n", err)
+		return nil, err
+	}
 
 	authRepository := AuthRepository.NewAuthRepository(db)
 	authService := AuthService.NewAuthService(&authRepository)
