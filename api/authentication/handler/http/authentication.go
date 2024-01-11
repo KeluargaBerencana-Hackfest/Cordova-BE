@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/Ndraaa15/cordova/api/authentication/service"
 	"github.com/Ndraaa15/cordova/config/firebase"
 	"github.com/Ndraaa15/cordova/domain"
+	"github.com/Ndraaa15/cordova/middleware"
 	"github.com/Ndraaa15/cordova/utils/errors"
 	"github.com/Ndraaa15/cordova/utils/response"
 	"github.com/gin-gonic/gin"
@@ -28,68 +28,61 @@ func NewAuthHandler(authService service.AuthServiceImpl) *AuthHandler {
 
 	app, err := firebase.InitFirebase()
 	if err != nil {
-		log.Println()
-		log.Fatal()
+		log.Printf("[cordova-authentication] failed to initialize firebase client. Error : %v\n", err)
+		return nil
 	}
 
 	ah.authClient = app.AuthFirebase()
-
 	return ah
 }
 
-func (ah *AuthHandler) Mount(s *gin.Engine) {
+func (ah *AuthHandler) Mount(s *gin.RouterGroup) {
 	auth := s.Group("/auth")
-	auth.POST("/signin/oauth", ah.LoginViaOauth)
+	auth.POST("/signin", middleware.ValidateJWTToken(ah.authClient), ah.Login)
 	auth.POST("/signup", ah.Register)
 }
 
-func (ah *AuthHandler) LoginViaOauth(ctx *gin.Context) {
-	// c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// defer cancel()
+func (ah *AuthHandler) Login(ctx *gin.Context) {
+	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	// var (
-	// 	message string
-	// 	err     error
-	// 	data    interface{}
-	// 	code    = http.StatusOK
-	// )
+	var (
+		message string
+		err     error
+		data    interface{}
+		code    = http.StatusOK
+	)
 
-	// defer func() {
-	// 	if err != nil {
-	// 		response.Error(ctx, code, err, message, nil)
-	// 		return
-	// 	}
-	// 	response.Success(ctx, code, message, data)
-	// }()
+	defer func() {
+		if err != nil {
+			log.Printf("[cordova-authentication] failed to sign in  user. Error : %v\n", err)
+			response.Error(ctx, code, err, message, nil)
+			return
+		}
+		log.Printf("[cordova-authentication] sucess to sign in user.")
+		response.Success(ctx, code, message, data)
+	}()
 
-	// id, exist := ctx.Get("user")
-	// if !exist {
-	// 	return
-	// }
-
-	// res, err := ah.as.ValidateAccount(c, id.(string), ah.authClient)
-	// if err != nil {
-	// 	code = http.StatusBadRequest
-	// 	message = errors.ErrBadRequest.Error()
-	// 	return
-	// }
-
-	// select {
-	// case <-c.Done():
-	// 	message = errors.ErrRequestTimeout.Error()
-	// 	code = http.StatusRequestTimeout
-	// default:
-	// 	message = "Success to login"
-	// 	data = res
-	// }
-
-	user, err := ah.authClient.GetUser(context.Background(), "buxeIR2Dk7T3Rl0i6Gg13nDsd4a2")
-	if err != nil {
-		log.Println(err)
+	id, exist := ctx.Get("user")
+	if !exist {
 		return
 	}
-	fmt.Println(*user)
-	response.Success(ctx, 200, "", user)
+
+	res, err := ah.as.ValidateAccount(c, id.(string), ah.authClient)
+	if err != nil {
+		code = http.StatusBadRequest
+		message = errors.ErrBadRequest.Error()
+		return
+	}
+
+	select {
+	case <-c.Done():
+		message = errors.ErrRequestTimeout.Error()
+		code = http.StatusRequestTimeout
+	default:
+		message = "Success to login"
+		data = res
+	}
 }
 
 func (ah *AuthHandler) Register(ctx *gin.Context) {
@@ -105,9 +98,11 @@ func (ah *AuthHandler) Register(ctx *gin.Context) {
 
 	defer func() {
 		if err != nil {
+			log.Printf("[cordova-authentication] failed to register new user. Error : %v\n", err)
 			response.Error(ctx, code, err, message, nil)
 			return
 		}
+		log.Printf("[cordova-authentication] success to register new user. ID : %v\n", data)
 		response.Success(ctx, code, message, data)
 	}()
 

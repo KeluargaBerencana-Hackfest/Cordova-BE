@@ -3,10 +3,6 @@ package errors
 import "errors"
 
 var (
-	ErrSigningJWT = errors.New("FAILED_SIGNING_JWT")
-
-	ErrClaimsJWT = errors.New("FAILED_GET_CLAIMS_FROM_JWT")
-
 	ErrConnDatabase = errors.New("FAILED_CONNECT_DATABASE")
 
 	ErrInvalidRequest = errors.New("INVALID_REQUEST")
@@ -24,4 +20,14 @@ var (
 	ErrFailedCreateAccount = errors.New("FAILED_TO_CREATE_NEW_USER")
 
 	ErrUserNotVerified = errors.New("USER_IS_NOT_VERIFIED")
+
+	ErrFailedCountEmailUser = errors.New("FAILED_COUNT_EMAIL_USER")
+
+	ErrEmailAlreadyExist = errors.New("EMAIL_ALREADY_EXIST")
+
+	ErrFailedSaveAccount = errors.New("FAILED_SAVE_ACCOUNT")
+
+	ErrFailedGetAccount = errors.New("FAILED_GET_ACCOUNT")
+
+	ErrFailedVerifyAccount = errors.New("FAILED_VERIFY_ACCOUNT")
 )

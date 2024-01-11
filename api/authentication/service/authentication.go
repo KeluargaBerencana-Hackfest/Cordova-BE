@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/Ndraaa15/cordova/api/authentication/repository"
@@ -12,7 +11,7 @@ import (
 )
 
 type AuthServiceImpl interface {
-	ValidateAccount(c context.Context, token string, client *auth.Client) (*domain.User, error)
+	ValidateAccount(c context.Context, id string, client *auth.Client) (*domain.User, error)
 	RegisterAccount(c context.Context, req *domain.SignupRequest, client *auth.Client) (string, error)
 }
 
@@ -20,46 +19,64 @@ type AuthService struct {
 	ar repository.AuthRepositoryImpl
 }
 
-func NewAuthService(authRepository *repository.AuthRepositoryImpl) AuthServiceImpl {
+func NewAuthService(authRepository repository.AuthRepositoryImpl) AuthServiceImpl {
 	return &AuthService{authRepository}
 }
 
-func (as *AuthService) ValidateAccount(c context.Context, token string, client *auth.Client) (*domain.User, error) {
-	//check existing id in database & check isActive
-	resp, err := client.VerifyIDToken(context.Background(), token)
+func (as *AuthService) ValidateAccount(c context.Context, id string, authClient *auth.Client) (*domain.User, error) {
+	user, err := authClient.GetUser(c, id)
 	if err != nil {
-		return nil, err
-	}
-	user, err := client.GetUser(c, resp.UID)
-	if err != nil {
-		return nil, err
+		return nil, errors.ErrFailedGetAccount
 	}
 
 	if !user.EmailVerified {
 		return nil, errors.ErrUserNotVerified
 	}
 
-	fmt.Println(*resp)
-	//if there no exist create new one
-	return &domain.User{}, nil
+	count, err := as.ar.CountEmailAccount(&c, user.Email)
+	if err != nil {
+		return nil, errors.ErrFailedCountEmailUser
+	}
+
+	if count != 0 {
+		userRecord, err := as.ar.GetAccountByID(c, user.UID)
+		if err != nil {
+			return nil, errors.ErrFailedGetAccount
+		}
+		return userRecord, nil
+	}
+
+	newUser, err := as.ar.SaveAccount(c, parseUserReq(user))
+	if err != nil {
+		return nil, errors.ErrFailedSaveAccount
+	}
+
+	return newUser, nil
 }
 
 func (as *AuthService) RegisterAccount(c context.Context, req *domain.SignupRequest, authClient *auth.Client) (string, error) {
-	//check existing email in database
+	count, err := as.ar.CountEmailAccount(&c, req.Email)
+	if err != nil {
+		return "", errors.ErrFailedCountEmailUser
+	}
+
+	if count != 0 {
+		return "", errors.ErrEmailAlreadyExist
+	}
 
 	if req.Password != req.ConfirmPassword {
 		return "", errors.ErrPasswordNotSame
 	}
 
 	resp, err := authClient.CreateUser(c, (&auth.UserToCreate{}).DisplayName(req.Name).Email(req.Email).Password(req.Password))
-
 	if err != nil {
 		return "", errors.ErrFailedCreateAccount
 	}
 
-	fmt.Println(resp.UID)
-
-	//adding to database
+	_, err = as.ar.SaveAccount(c, parseUserReq(resp))
+	if err != nil {
+		return "", err
+	}
 
 	link, err := authClient.EmailVerificationLink(context.Background(), req.Email)
 	if err != nil {
@@ -83,4 +100,13 @@ func sendEmailVerification(req *domain.SignupRequest, link string) error {
 		return err
 	}
 	return nil
+}
+
+// Create user account for db if there no existing email (because the user can login via google)
+func parseUserReq(oauth *auth.UserRecord) *domain.User {
+	return &domain.User{
+		ID:    oauth.UID,
+		Name:  oauth.DisplayName,
+		Email: oauth.Email,
+	}
 }

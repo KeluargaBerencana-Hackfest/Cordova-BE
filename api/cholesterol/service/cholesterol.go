@@ -14,7 +14,7 @@ type CholesterolService struct {
 	cr repository.CholesterolRepositoryImpl
 }
 
-func NewCholesterolService(cholesterolRepository *repository.CholesterolRepositoryImpl) CholesterolServiceImpl {
+func NewCholesterolService(cholesterolRepository repository.CholesterolRepositoryImpl) CholesterolServiceImpl {
 	return &CholesterolService{cholesterolRepository}
 }
 

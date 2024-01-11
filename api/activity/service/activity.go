@@ -9,6 +9,6 @@ type ActivityService struct {
 	cr repository.ActivityRepositoryImpl
 }
 
-func NewActivityService(activityRepository *repository.ActivityRepositoryImpl) ActivityServiceImpl {
+func NewActivityService(activityRepository repository.ActivityRepositoryImpl) ActivityServiceImpl {
 	return &ActivityService{activityRepository}
 }

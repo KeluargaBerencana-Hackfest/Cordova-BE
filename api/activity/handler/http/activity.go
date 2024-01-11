@@ -13,6 +13,6 @@ func NewActivityHandler(activityService service.ActivityServiceImpl) *ActivityHa
 	return &ActivityHandler{activityService}
 }
 
-func (ah *ActivityHandler) Mount(s *gin.Engine) {
+func (ah *ActivityHandler) Mount(s *gin.RouterGroup) {
 	_ = s.Group("/activity")
 }

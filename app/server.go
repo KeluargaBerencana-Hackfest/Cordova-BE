@@ -10,6 +10,9 @@ import (
 	AuthHandler "github.com/Ndraaa15/cordova/api/authentication/handler/http"
 	AuthRepository "github.com/Ndraaa15/cordova/api/authentication/repository"
 	AuthService "github.com/Ndraaa15/cordova/api/authentication/service"
+	UserHandler "github.com/Ndraaa15/cordova/api/user/handler/http"
+	UserRepository "github.com/Ndraaa15/cordova/api/user/repository"
+	UserService "github.com/Ndraaa15/cordova/api/user/service"
 	"github.com/Ndraaa15/cordova/config/database"
 	"github.com/Ndraaa15/cordova/middleware"
 	"github.com/gin-gonic/gin"
@@ -28,7 +31,7 @@ type Server struct {
 }
 
 type Handler interface {
-	Mount(engine *gin.Engine)
+	Mount(engine *gin.RouterGroup)
 }
 
 func NewServer() (*Server, error) {
@@ -54,10 +57,14 @@ func NewServer() (*Server, error) {
 	}
 
 	authRepository := AuthRepository.NewAuthRepository(db)
-	authService := AuthService.NewAuthService(&authRepository)
+	authService := AuthService.NewAuthService(authRepository)
 	authHandler := AuthHandler.NewAuthHandler(authService)
 
-	s.handlers = []Handler{authHandler}
+	userRepository := UserRepository.NewUserRepository(db)
+	userService := UserService.NewUserService(userRepository)
+	userHandler := UserHandler.NewUserHandler(userService)
+
+	s.handlers = []Handler{authHandler, userHandler}
 
 	return s, nil
 }
@@ -65,7 +72,7 @@ func NewServer() (*Server, error) {
 func (s *Server) StartServer() {
 	s.engine.Use(middleware.CORS())
 	for _, handler := range s.handlers {
-		handler.Mount(s.engine)
+		handler.Mount(s.engine.Group("/api/v1"))
 	}
 }
 

@@ -20,7 +20,7 @@ func NewCholesterolHandler(cholesterolService service.CholesterolServiceImpl) *C
 	return &CholesterolHandler{cholesterolService}
 }
 
-func (ch *CholesterolHandler) Mount(s *gin.Engine) {
+func (ch *CholesterolHandler) Mount(s *gin.RouterGroup) {
 	_ = s.Group("/cholesterol/:id")
 }
 
@@ -62,4 +62,8 @@ func (ch *CholesterolHandler) CheckCholesterol(ctx *gin.Context) {
 	default:
 		message = "Please verified the email"
 	}
+}
+
+func (ch *CholesterolHandler) GetCholesterolHistory(ctx *gin.Context) {
+
 }

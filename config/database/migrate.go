@@ -1,10 +1,11 @@
 package database
 
-import "log"
+import (
+	"log"
+)
 
 const userTable = `
-DROP TABLE IF EXISTS users;
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(255) PRIMARY KEY,
     name VARCHAR(255),
     email VARCHAR(255),
@@ -17,28 +18,29 @@ CREATE TABLE users (
     sleep_hours DOUBLE PRECISION,
     smoking BOOLEAN,
     alcohol_consumption BOOLEAN,
-    diet_level VARCHAR(255),
     sedentary_hours DOUBLE PRECISION,
-    heart_rate DOUBLE PRECISION,
     diabetes BOOLEAN,
-    triglycerides DOUBLE PRECISION,
     family_history BOOLEAN,
     previous_heart_problem BOOLEAN,
-    medication_use BOOLEAN
+    medication_use BOOLEAN,
+    photo_profile VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );`
 
-const cholesterolTable = `
-DROP TABLE IF EXISTS cholesterols;
-CREATE TABLE cholesterols (
-    user_id VARCHAR(255) REFERENCES users(id),
-    cholesterol_level DOUBLE PRECISION,
-    year BIGINT,
-    month VARCHAR(255),
-    PRIMARY KEY (user_id, year, month)
-);`
+// const cholesterolTable = `
+// CREATE TABLE IF NOT EXISTS cholesterols (
+//     user_id VARCHAR(255) REFERENCES users(id),
+//     cholesterol_level DOUBLE PRECISION,
+//     year BIGINT,
+//     month VARCHAR(255),
+//     PRIMARY KEY (user_id, year, month)
+//     create_at TIMESTAMP
+//     update_at TIMESTAMP
+// );`
 
 func (db *ClientDB) MigrateDatabase() error {
-	tables := []string{userTable, cholesterolTable}
+	tables := []string{userTable}
 	for _, table := range tables {
 		_, err := db.Exec(table)
 		if err != nil {
