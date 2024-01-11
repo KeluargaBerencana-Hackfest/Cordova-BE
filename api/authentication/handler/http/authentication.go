@@ -65,6 +65,9 @@ func (ah *AuthHandler) Login(ctx *gin.Context) {
 
 	id, exist := ctx.Get("user")
 	if !exist {
+		code = http.StatusBadRequest
+		message = "Failed to get user id"
+		err = errors.ErrBadRequest
 		return
 	}
 

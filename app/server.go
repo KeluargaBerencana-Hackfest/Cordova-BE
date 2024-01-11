@@ -10,6 +10,9 @@ import (
 	AuthHandler "github.com/Ndraaa15/cordova/api/authentication/handler/http"
 	AuthRepository "github.com/Ndraaa15/cordova/api/authentication/repository"
 	AuthService "github.com/Ndraaa15/cordova/api/authentication/service"
+	CholesterolHandler "github.com/Ndraaa15/cordova/api/cholesterol/handler/http"
+	CholesterolRepository "github.com/Ndraaa15/cordova/api/cholesterol/repository"
+	CholesterolService "github.com/Ndraaa15/cordova/api/cholesterol/service"
 	UserHandler "github.com/Ndraaa15/cordova/api/user/handler/http"
 	UserRepository "github.com/Ndraaa15/cordova/api/user/repository"
 	UserService "github.com/Ndraaa15/cordova/api/user/service"
@@ -64,7 +67,11 @@ func NewServer() (*Server, error) {
 	userService := UserService.NewUserService(userRepository)
 	userHandler := UserHandler.NewUserHandler(userService)
 
-	s.handlers = []Handler{authHandler, userHandler}
+	cholesterolRepository := CholesterolRepository.NewCholesterolRepository(db)
+	cholesterolService := CholesterolService.NewCholesterolService(cholesterolRepository)
+	cholesterolHandler := CholesterolHandler.NewCholesterolHandler(cholesterolService)
+
+	s.handlers = []Handler{authHandler, userHandler, cholesterolHandler}
 
 	return s, nil
 }

@@ -66,6 +66,9 @@ func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
 
 	id, exist := ctx.Get("user")
 	if !exist {
+		code = http.StatusBadRequest
+		message = "Failed to get user id"
+		err = errors.ErrBadRequest
 		return
 	}
 
@@ -116,6 +119,9 @@ func (uh *UserHandler) UploadPhotoProfile(ctx *gin.Context) {
 
 	id, exist := ctx.Get("user")
 	if !exist {
+		code = http.StatusBadRequest
+		message = "Failed to get user id"
+		err = errors.ErrBadRequest
 		return
 	}
 

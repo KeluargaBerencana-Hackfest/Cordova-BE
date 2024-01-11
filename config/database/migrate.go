@@ -28,19 +28,23 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );`
 
-// const cholesterolTable = `
-// CREATE TABLE IF NOT EXISTS cholesterols (
-//     user_id VARCHAR(255) REFERENCES users(id),
-//     cholesterol_level DOUBLE PRECISION,
-//     year BIGINT,
-//     month VARCHAR(255),
-//     PRIMARY KEY (user_id, year, month)
-//     create_at TIMESTAMP
-//     update_at TIMESTAMP
-// );`
+const cholesterolTable = `
+CREATE TABLE IF NOT EXISTS cholesterols (
+    user_id VARCHAR(255) REFERENCES users(id),
+    cholesterol DOUBLE PRECISION,
+    cholesterol_level VARCHAR(255),
+    triglycerides DOUBLE PRECISION,
+    heart_rate DOUBLE PRECISION,
+    blood_pressure VARCHAR(255),
+    year BIGINT,
+    month BIGINT,
+    PRIMARY KEY (user_id, year, month),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);`
 
 func (db *ClientDB) MigrateDatabase() error {
-	tables := []string{userTable}
+	tables := []string{userTable, cholesterolTable}
 	for _, table := range tables {
 		_, err := db.Exec(table)
 		if err != nil {
