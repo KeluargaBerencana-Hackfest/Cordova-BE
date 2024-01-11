@@ -4,13 +4,20 @@ import (
 	"net/http"
 	"strings"
 
-	"firebase.google.com/go/v4/auth"
+	"github.com/Ndraaa15/cordova/config/firebase"
 	"github.com/Ndraaa15/cordova/utils/jwt"
 	"github.com/gin-gonic/gin"
 )
 
-func ValidateJWTToken(client *auth.Client) gin.HandlerFunc {
+func ValidateJWTToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+
+		client, err := firebase.InitFirebase()
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Error initialize firebase"})
+			return
+		}
+
 		header := ctx.Request.Header.Get("Authorization")
 
 		if header == "" {
@@ -26,7 +33,7 @@ func ValidateJWTToken(client *auth.Client) gin.HandlerFunc {
 
 		tokenString := tokenParts[1]
 
-		claims, err := jwt.DecodeToken(client, tokenString)
+		claims, err := jwt.DecodeToken(client.AuthFirebase(), tokenString)
 		if err != nil {
 			ctx.AbortWithError(http.StatusUnauthorized, err)
 			return

@@ -38,7 +38,7 @@ func NewAuthHandler(authService service.AuthServiceImpl) *AuthHandler {
 
 func (ah *AuthHandler) Mount(s *gin.RouterGroup) {
 	auth := s.Group("/auth")
-	auth.POST("/signin", middleware.ValidateJWTToken(ah.authClient), ah.Login)
+	auth.POST("/signin", middleware.ValidateJWTToken(), ah.Login)
 	auth.POST("/signup", ah.Register)
 }
 

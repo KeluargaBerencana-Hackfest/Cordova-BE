@@ -10,6 +10,7 @@ import (
 	"github.com/Ndraaa15/cordova/api/user/service"
 	"github.com/Ndraaa15/cordova/config/firebase"
 	"github.com/Ndraaa15/cordova/domain"
+	"github.com/Ndraaa15/cordova/middleware"
 	"github.com/Ndraaa15/cordova/utils/errors"
 	"github.com/Ndraaa15/cordova/utils/response"
 	"github.com/gin-gonic/gin"
@@ -38,8 +39,8 @@ func NewUserHandler(userService service.UserServiceImpl) *UserHandler {
 
 func (uh *UserHandler) Mount(s *gin.RouterGroup) {
 	user := s.Group("/user")
-	user.PUT("/update", uh.UpdateUser)
-	user.POST("/update/photo-profile", uh.UploadPhotoProfile)
+	user.PUT("/update", middleware.ValidateJWTToken(), uh.UpdateUser)
+	user.POST("/update/photo-profile", middleware.ValidateJWTToken(), uh.UploadPhotoProfile)
 }
 
 func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
@@ -113,10 +114,10 @@ func (uh *UserHandler) UploadPhotoProfile(ctx *gin.Context) {
 		response.Success(ctx, code, message, data)
 	}()
 
-	// id, exist := ctx.Get("user")
-	// if !exist {
-	// 	return
-	// }
+	id, exist := ctx.Get("user")
+	if !exist {
+		return
+	}
 
 	photoProfile, _, err := ctx.Request.FormFile("photo-profile")
 	if err != nil {
@@ -125,7 +126,7 @@ func (uh *UserHandler) UploadPhotoProfile(ctx *gin.Context) {
 		return
 	}
 
-	res, err := uh.us.UploadPhoto(c, photoProfile, "7jZRFXJM4MQ1MDGIjNEUiqUBoBr1")
+	res, err := uh.us.UploadPhoto(c, photoProfile, id.(string))
 	if err != nil {
 		code = http.StatusInternalServerError
 		message = ""
