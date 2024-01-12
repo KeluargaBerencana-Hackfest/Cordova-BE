@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
     family_history BOOLEAN,
     previous_heart_problem BOOLEAN,
     medication_use BOOLEAN,
+    stress_level INTEGER,
     photo_profile VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP

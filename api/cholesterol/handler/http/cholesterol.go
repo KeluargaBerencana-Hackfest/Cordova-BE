@@ -46,7 +46,7 @@ func (ch *CholesterolHandler) CheckCholesterol(ctx *gin.Context) {
 		response.Success(ctx, code, message, data)
 	}()
 
-	_, exist := ctx.Get("user")
+	id, exist := ctx.Get("user")
 	if !exist {
 		code = http.StatusBadRequest
 		message = "Failed to get user id"
@@ -59,7 +59,7 @@ func (ch *CholesterolHandler) CheckCholesterol(ctx *gin.Context) {
 		code = http.StatusBadRequest
 	}
 
-	res, err := ch.cs.CalculateCholesterol(c, req)
+	res, err := ch.cs.CalculateCholesterol(c, id.(string), req)
 
 	if err != nil {
 		code = http.StatusBadRequest

@@ -31,6 +31,7 @@ SELECT
 	family_history,
 	previous_heart_problem,
 	medication_use,
+	stress_level,
 	photo_profile,
 	created_at,
 	updated_at
