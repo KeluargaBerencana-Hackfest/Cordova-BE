@@ -110,7 +110,6 @@ func (ah *AuthHandler) Register(ctx *gin.Context) {
 	}()
 
 	req := &domain.SignupRequest{}
-
 	if err := ctx.ShouldBindJSON(req); err != nil {
 		code = http.StatusBadRequest
 	}

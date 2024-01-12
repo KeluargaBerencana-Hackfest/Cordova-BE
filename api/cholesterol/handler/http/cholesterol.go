@@ -55,14 +55,15 @@ func (ch *CholesterolHandler) CheckCholesterol(ctx *gin.Context) {
 	}
 
 	req := &domain.CholesterolRequest{}
-
 	if err := ctx.ShouldBindJSON(req); err != nil {
 		code = http.StatusBadRequest
 	}
 
+	res, err := ch.cs.CalculateCholesterol(c, req)
+
 	if err != nil {
 		code = http.StatusBadRequest
-		message = "Failed to register account"
+		message = "Failed to calculate cholesterol"
 		return
 	}
 
@@ -71,7 +72,8 @@ func (ch *CholesterolHandler) CheckCholesterol(ctx *gin.Context) {
 		message = errors.ErrRequestTimeout.Error()
 		code = http.StatusRequestTimeout
 	default:
-		message = "Please verified the email"
+		message = "Success calculate cholesterol"
+		data = res
 	}
 }
 

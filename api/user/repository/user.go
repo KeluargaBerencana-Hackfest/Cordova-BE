@@ -41,6 +41,7 @@ func (ur *UserRepository) UpdateUser(c context.Context, user *domain.User) (*dom
 		"family_history":         user.FamilyHistory,
 		"previous_heart_problem": user.PreviousHeartProblem,
 		"medication_use":         user.MedicationUse,
+		"stress_level":           user.StressLevel,
 		"photo_profile":          user.PhotoProfile,
 	}
 
@@ -95,6 +96,7 @@ type UserDB struct {
 	FamilyHistory        *bool      `db:"family_history"`
 	PreviousHeartProblem *bool      `db:"previous_heart_problem"`
 	MedicationUse        *bool      `db:"medication_use"`
+	StressLevel          *float64   `db:"stress_level"`
 	PhotoProfile         *string    `db:"photo_profile"`
 	CreatedAt            time.Time  `db:"created_at"`
 	UpdatedAt            time.Time  `db:"updated_at"`
@@ -163,6 +165,10 @@ func (u *UserDB) Parse() *domain.User {
 
 	if u.MedicationUse != nil {
 		user.MedicationUse = *u.MedicationUse
+	}
+
+	if u.StressLevel != nil {
+		user.StressLevel = *u.StressLevel
 	}
 
 	if u.PhotoProfile != nil {

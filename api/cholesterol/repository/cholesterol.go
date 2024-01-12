@@ -1,13 +1,16 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/Ndraaa15/cordova/config/database"
 	"github.com/Ndraaa15/cordova/domain"
 	"github.com/jmoiron/sqlx"
 )
 
 type CholesterolRepositoryImpl interface {
-	GetCholesterolHistory(id string) ([]*domain.CholesterolDB, error)
+	SavedRecordCholesterol(c, id string, cholesterol *domain.CholesterolDB) (*domain.CholesterolDB, error)
+	GetCholesterolHistory(c context.Context, id string) ([]*domain.CholesterolDB, error)
 }
 
 type CholesterolRepository struct {
@@ -18,7 +21,7 @@ func NewCholesterolRepository(db *database.ClientDB) CholesterolRepositoryImpl {
 	return &CholesterolRepository{db}
 }
 
-func (cr *CholesterolRepository) GetCholesterolHistory(id string) ([]*domain.CholesterolDB, error) {
+func (cr *CholesterolRepository) GetCholesterolHistory(c context.Context, id string) ([]*domain.CholesterolDB, error) {
 	var cholesterol []*domain.CholesterolDB
 
 	argKV := map[string]interface{}{
@@ -53,4 +56,11 @@ func (cr *CholesterolRepository) GetCholesterolHistory(id string) ([]*domain.Cho
 	}
 
 	return cholesterol, nil
+}
+
+func (cr *CholesterolRepository) SavedRecordCholesterol(c, id string, cholesterol *domain.CholesterolDB) (*domain.CholesterolDB, error) {
+	// get user by id
+	// get percentage by hit model
+	// by cholesterol level get recommendation
+	return nil, nil
 }

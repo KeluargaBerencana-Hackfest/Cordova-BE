@@ -108,12 +108,10 @@ func validateUpdateRequest(req *domain.UserUpdateRequest, user *domain.User) (*d
 	}
 
 	if req.Weight != user.Weight && req.Weight > 0 {
-		fmt.Println("HI")
 		user.Weight = req.Weight
 	}
 
 	if req.Height != user.Height && req.Height > 0 {
-		fmt.Println("HO")
 		user.Height = req.Height
 	}
 
@@ -122,12 +120,10 @@ func validateUpdateRequest(req *domain.UserUpdateRequest, user *domain.User) (*d
 	}
 
 	if req.PhysicalActivity != user.PhysicalActivity && req.PhysicalActivity > 0 {
-		fmt.Println("HA")
 		user.PhysicalActivity = req.PhysicalActivity
 	}
 
 	if req.SleepHours != user.SleepHours && req.SleepHours > 0 {
-		fmt.Println("HE")
 		user.SleepHours = req.SleepHours
 	}
 
@@ -140,7 +136,6 @@ func validateUpdateRequest(req *domain.UserUpdateRequest, user *domain.User) (*d
 	}
 
 	if req.SedentaryHours != user.SedentaryHours && req.SedentaryHours > 0 {
-		fmt.Println("HU")
 		user.SedentaryHours = req.SedentaryHours
 	}
 
@@ -158,6 +153,10 @@ func validateUpdateRequest(req *domain.UserUpdateRequest, user *domain.User) (*d
 
 	if req.MedicationUse != user.MedicationUse {
 		user.MedicationUse = req.MedicationUse
+	}
+
+	if req.StressLevel != user.StressLevel && req.StressLevel > 0 {
+		user.StressLevel = req.StressLevel
 	}
 
 	return user, nil

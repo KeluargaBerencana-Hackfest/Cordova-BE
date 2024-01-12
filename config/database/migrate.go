@@ -31,13 +31,16 @@ CREATE TABLE IF NOT EXISTS users (
 const cholesterolTable = `
 CREATE TABLE IF NOT EXISTS cholesterols (
     user_id VARCHAR(255) REFERENCES users(id),
-    cholesterol DOUBLE PRECISION,
+    average_cholesterol DOUBLE PRECISION,
+    last_cholesterol_record DOUBLE PRECISION,
     cholesterol_level VARCHAR(255),
     triglycerides DOUBLE PRECISION,
     heart_rate DOUBLE PRECISION,
     blood_pressure VARCHAR(255),
-    year BIGINT,
     month BIGINT,
+    year BIGINT,
+    heart_risk_percentage DOUBLE PRECISION,
+    cholesterol_test_date DATE,
     PRIMARY KEY (user_id, year, month),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP

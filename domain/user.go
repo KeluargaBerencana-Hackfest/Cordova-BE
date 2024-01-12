@@ -20,6 +20,7 @@ type User struct {
 	FamilyHistory        bool      `json:"family_history"`
 	PreviousHeartProblem bool      `json:"previous_heart_problem"`
 	MedicationUse        bool      `json:"medication_use"`
+	StressLevel          float64   `json:"-"`
 	PhotoProfile         string    `json:"photo_profile"`
 	CreatedAt            time.Time `json:"created_at"`
 	UpdatedAt            time.Time `json:"updated_at"`
@@ -42,4 +43,5 @@ type UserUpdateRequest struct {
 	FamilyHistory        bool    `json:"family_history"`
 	PreviousHeartProblem bool    `json:"previous_heart_problem"`
 	MedicationUse        bool    `json:"medication_use"`
+	StressLevel          float64 `json:"stress_level"`
 }

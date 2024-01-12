@@ -19,6 +19,7 @@ SET
 	family_history = :family_history,
 	previous_heart_problem = :previous_heart_problem,
 	medication_use = :medication_use,
+	stress_level = :stress_level,
 	photo_profile = :photo_profile
 WHERE id = :id
 `
@@ -42,6 +43,7 @@ SELECT
 	family_history,
 	previous_heart_problem,
 	medication_use,
+	stress_level,
 	photo_profile,
 	created_at,
 	updated_at

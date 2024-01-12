@@ -3,13 +3,16 @@ package repository
 const GetCholesterolHistory = `
 SELECT
 	user_id,
-	cholesterol,
+	average_cholesterol,
+	last_cholesterol_record,
 	cholesterol_level,
 	triglycerides,
 	heart_rate,
 	blood_pressure,
-	year,
 	month,
+	year,
+	heart_risk_percentage,
+	cholesterol_test_date,
 	created_at,
 	updated_at
 FROM cholesterols

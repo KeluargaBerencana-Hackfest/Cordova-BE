@@ -16,7 +16,7 @@ type FirebaseClient struct {
 }
 
 func InitFirebase() (*FirebaseClient, error) {
-	opt := option.WithCredentialsFile("./firebase-account-key.json")
+	opt := option.WithCredentialsFile("./firebase-client-key.json")
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing app: %v\n", err)
