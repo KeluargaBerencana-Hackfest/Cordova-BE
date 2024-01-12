@@ -8,7 +8,7 @@
 *A mobile-based application to record and monitor users' cholesterol level to prevent heart disease. This application is designed based on SDGs number 3, Good Health & Well Being. Completed with features such as recording cholesterol levels, graphs of increasing & decreasing cholesterol, percentage chance of developing heart disease, recommendations for the nearest health center, and suggestions for activities carried out according to users' cholesterol levels and percentage of developing heart disease.*
 
 ## Cordova-BE
-*Jobdesk here...*
+*Cordova-BE is a repository that stores the source code for the server of the Cordova application. The backend or server for Cordova is built using the Golang programming language with the Gin framework and utilizes the Postgresql database. Additionally, the Cordova server is integrated with Firebase for authentication and data storage, while the deployment process is handled using the Google Cloud Platform. The creation of this server involves various considerations to ensure the development of an optimal server.*
 
 #  💻  Features
 - Authentication
