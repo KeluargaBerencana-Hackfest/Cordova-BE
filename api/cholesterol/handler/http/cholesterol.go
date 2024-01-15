@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -40,9 +41,11 @@ func (ch *CholesterolHandler) CheckCholesterol(ctx *gin.Context) {
 
 	defer func() {
 		if err != nil {
+			log.Printf("[cordova-cholesterol-http] failed to check cholesterol. Error : %v\n", err)
 			response.Error(ctx, code, err, message, nil)
 			return
 		}
+		log.Printf("[cordova-user-http] success to check cholesterol.")
 		response.Success(ctx, code, message, data)
 	}()
 
@@ -55,12 +58,11 @@ func (ch *CholesterolHandler) CheckCholesterol(ctx *gin.Context) {
 	}
 
 	req := &domain.CholesterolRequest{}
-	if err := ctx.ShouldBindJSON(req); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		code = http.StatusBadRequest
 	}
 
 	res, err := ch.cs.CalculateCholesterol(c, id.(string), req)
-
 	if err != nil {
 		code = http.StatusBadRequest
 		message = "Failed to calculate cholesterol"

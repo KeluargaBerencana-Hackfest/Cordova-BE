@@ -30,4 +30,8 @@ var (
 	ErrFailedGetAccount = errors.New("FAILED_GET_ACCOUNT")
 
 	ErrFailedVerifyAccount = errors.New("FAILED_VERIFY_ACCOUNT")
+
+	ErrNotYetActivityDone = errors.New("NOT_YET_ACTIVITY_DONE")
+
+	ErrRegisterRequestNotValid = errors.New("REGISTER_REQUEST_NOT_VALID")
 )

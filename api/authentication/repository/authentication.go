@@ -10,9 +10,9 @@ import (
 )
 
 type AuthRepositoryImpl interface {
-	SaveAccount(c context.Context, user *domain.User) (*domain.User, error)
-	GetAccountByID(c context.Context, vas string) (*domain.User, error)
-	CountEmailAccount(c *context.Context, email string) (int, error)
+	SaveUser(c context.Context, user *domain.User) (*domain.User, error)
+	GetUserByID(c context.Context, vas string) (*domain.User, error)
+	CountEmailAccount(c context.Context, email string) (int, error)
 }
 
 type AuthRepository struct {
@@ -23,7 +23,7 @@ func NewAuthRepository(db *database.ClientDB) AuthRepositoryImpl {
 	return &AuthRepository{db}
 }
 
-func (ar *AuthRepository) SaveAccount(c context.Context, user *domain.User) (*domain.User, error) {
+func (ar *AuthRepository) SaveUser(c context.Context, user *domain.User) (*domain.User, error) {
 	argKV := map[string]interface{}{
 		"id":    user.ID,
 		"name":  user.Name,
@@ -38,9 +38,9 @@ func (ar *AuthRepository) SaveAccount(c context.Context, user *domain.User) (*do
 	return user, nil
 }
 
-func (ar *AuthRepository) GetAccountByID(c context.Context, val string) (*domain.User, error) {
+func (ar *AuthRepository) GetUserByID(c context.Context, userID string) (*domain.User, error) {
 	argKV := map[string]interface{}{
-		"id": val,
+		"id": userID,
 	}
 
 	query, args, err := sqlx.Named(GetAccountByID, argKV)
@@ -56,14 +56,14 @@ func (ar *AuthRepository) GetAccountByID(c context.Context, val string) (*domain
 	query = ar.db.Rebind(query)
 
 	var user UserDB
-	if err := ar.db.QueryRowx(query, args...).StructScan(&user); err != nil {
+	if err := ar.db.QueryRowxContext(c, query, args...).StructScan(&user); err != nil {
 		return nil, err
 	}
 
 	return user.Parse(), nil
 }
 
-func (ar *AuthRepository) CountEmailAccount(c *context.Context, email string) (int, error) {
+func (ar *AuthRepository) CountEmailAccount(c context.Context, email string) (int, error) {
 	argKV := map[string]interface{}{
 		"email": email,
 	}
@@ -80,7 +80,7 @@ func (ar *AuthRepository) CountEmailAccount(c *context.Context, email string) (i
 	query = ar.db.Rebind(query)
 
 	var countEmail int
-	if err := ar.db.QueryRowx(query, args...).Scan(&countEmail); err != nil {
+	if err := ar.db.QueryRowxContext(c, query, args...).Scan(&countEmail); err != nil {
 		return -1, err
 	}
 
@@ -105,6 +105,7 @@ type UserDB struct {
 	FamilyHistory        *bool      `db:"family_history"`
 	PreviousHeartProblem *bool      `db:"previous_heart_problem"`
 	MedicationUse        *bool      `db:"medication_use"`
+	StressLevel          *float64   `db:"stress_level"`
 	PhotoProfile         *string    `db:"photo_profile"`
 	CreatedAt            time.Time  `db:"created_at"`
 	UpdatedAt            time.Time  `db:"updated_at"`
@@ -173,6 +174,10 @@ func (u *UserDB) Parse() *domain.User {
 
 	if u.MedicationUse != nil {
 		user.MedicationUse = *u.MedicationUse
+	}
+
+	if u.StressLevel != nil {
+		user.StressLevel = *u.StressLevel
 	}
 
 	if u.PhotoProfile != nil {

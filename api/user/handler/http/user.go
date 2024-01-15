@@ -56,11 +56,11 @@ func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
 
 	defer func() {
 		if err != nil {
-			log.Printf("[cordova-user] failed to update user. Error : %v\n", err)
+			log.Printf("[cordova-user-http] failed to update user. Error : %v\n", err)
 			response.Error(ctx, code, err, message, nil)
 			return
 		}
-		log.Printf("[cordova-user] success to update user.")
+		log.Printf("[cordova-user-http] success to update user.")
 		response.Success(ctx, code, message, data)
 	}()
 
@@ -109,11 +109,11 @@ func (uh *UserHandler) UploadPhotoProfile(ctx *gin.Context) {
 
 	defer func() {
 		if err != nil {
-			log.Printf("[cordova-user] failed to update user photo profile. Error : %v\n", err)
+			log.Printf("[cordova-user-http] failed to update user photo profile. Error : %v\n", err)
 			response.Error(ctx, code, err, message, data)
 			return
 		}
-		log.Printf("[cordova-user] success to update user photo profile.")
+		log.Printf("[cordova-user-http] success to update user photo profile.")
 		response.Success(ctx, code, message, data)
 	}()
 

@@ -1,14 +1,15 @@
 package repository
 
 const SavedAccount = `
-INSERT INTO users (
-	id,
-	name,
-	email
+INSERT INTO 
+	users (
+		id,
+		name,
+		email
 ) VALUES (
-	:id,
-	:name,
-	:email
+		:id,
+		:name,
+		:email
 )
 `
 
@@ -35,12 +36,17 @@ SELECT
 	photo_profile,
 	created_at,
 	updated_at
-FROM users 
-WHERE id = :id
+FROM 
+	users 
+WHERE 
+	id = :id
 `
 
 const CountEmail = `
-SELECT COUNT(email) 
-FROM users 
-WHERE email = :email
+SELECT 
+	COUNT(email) 
+FROM 
+	users 
+WHERE 
+	email = :email
 `

@@ -10,8 +10,8 @@ type CholesterolDB struct {
 	Triglycerides         float64   `json:"triglycerides" db:"triglycerides"`
 	HeartRate             float64   `json:"heart_rate" db:"heart_rate"`
 	BloodPressure         string    `json:"blood_pressure" db:"blood_pressure"`
-	Month                 uint64    `json:"month" db:"month"`
-	Year                  uint64    `json:"-" db:"year"`
+	Month                 int       `json:"month" db:"month"`
+	Year                  int       `json:"-" db:"year"`
 	HeartRiskPercentage   float64   `json:"heart_risk_percentage" db:"heart_risk_percentage"`
 	CholesterolTestDate   time.Time `json:"cholesterol_test_date" db:"cholesterol_test_date"`
 	CreatedAt             time.Time `json:"created_at" db:"created_at"`
@@ -19,14 +19,19 @@ type CholesterolDB struct {
 }
 
 type Cholesterol struct {
-	UserID       string                      `json:"user_id"`
-	Cholesterols map[uint64][]*CholesterolDB `json:"cholesterols"`
+	UserID       string                   `json:"user_id"`
+	Cholesterols map[int][]*CholesterolDB `json:"cholesterols"`
 }
 
 type CholesterolRequest struct {
-	Triglycerides       float64   `json:"triglycerides"`
-	Cholesterol         float64   `json:"cholesterol"`
-	BloodPressure       string    `json:"blood_pressure"`
-	HeartRate           float64   `json:"heart_rate"`
-	CholesterolTestDate time.Time `json:"cholesterol_test_date"`
+	Triglycerides       float64 `json:"triglycerides"`
+	Cholesterol         float64 `json:"cholesterol"`
+	BloodPressure       string  `json:"blood_pressure"`
+	HeartRate           float64 `json:"heart_rate"`
+	CholesterolTestDate string  `json:"cholesterol_test_date"`
+}
+
+type CholesterolResponse struct {
+	Cholesterol *Cholesterol  `json:"cholesterol"`
+	Activity    []*ActivityDB `json:"activity"`
 }

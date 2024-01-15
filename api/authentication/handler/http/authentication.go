@@ -55,11 +55,11 @@ func (ah *AuthHandler) Login(ctx *gin.Context) {
 
 	defer func() {
 		if err != nil {
-			log.Printf("[cordova-authentication] failed to sign in  user. Error : %v\n", err)
+			log.Printf("[cordova-authentication-http] failed to sign in  user. Error : %v\n", err)
 			response.Error(ctx, code, err, message, nil)
 			return
 		}
-		log.Printf("[cordova-authentication] sucess to sign in user.")
+		log.Printf("[cordova-authentication-http] sucess to sign in user.")
 		response.Success(ctx, code, message, data)
 	}()
 
@@ -71,7 +71,7 @@ func (ah *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	res, err := ah.as.ValidateAccount(c, id.(string), ah.authClient)
+	res, err := ah.as.ValidateUser(c, id.(string), ah.authClient)
 	if err != nil {
 		code = http.StatusBadRequest
 		message = errors.ErrBadRequest.Error()
@@ -101,11 +101,11 @@ func (ah *AuthHandler) Register(ctx *gin.Context) {
 
 	defer func() {
 		if err != nil {
-			log.Printf("[cordova-authentication] failed to register new user. Error : %v\n", err)
+			log.Printf("[cordova-authentication-http] failed to register new user. Error : %v\n", err)
 			response.Error(ctx, code, err, message, nil)
 			return
 		}
-		log.Printf("[cordova-authentication] success to register new user. ID : %v\n", data)
+		log.Printf("[cordova-authentication-http] success to register new user. ID : %v\n", data)
 		response.Success(ctx, code, message, data)
 	}()
 
@@ -114,7 +114,7 @@ func (ah *AuthHandler) Register(ctx *gin.Context) {
 		code = http.StatusBadRequest
 	}
 
-	res, err := ah.as.RegisterAccount(c, req, ah.authClient)
+	res, err := ah.as.RegisterUser(c, req, ah.authClient)
 	if err != nil {
 		code = http.StatusBadRequest
 		message = "Failed to register account"

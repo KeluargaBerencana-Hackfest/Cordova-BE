@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Ndraaa15/cordova/config/firebase"
-	"github.com/Ndraaa15/cordova/utils/jwt"
+	utils_jwt "github.com/Ndraaa15/cordova/utils/jwt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,14 +34,17 @@ func ValidateJWTToken() gin.HandlerFunc {
 		}
 
 		tokenString := tokenParts[1]
-
-		claims, err := jwt.DecodeToken(client.AuthFirebase(), tokenString)
+		claims, err := utils_jwt.DecodeToken(client.AuthFirebase(), tokenString)
 		if err != nil {
-			ctx.AbortWithError(http.StatusUnauthorized, err)
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": fmt.Sprintf("Error decode token : %v", err)})
 			return
 		}
 
 		userID := claims.UID
+		if claims.Expires < time.Now().UTC().Unix() {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Token expired"})
+			return
+		}
 
 		ctx.Set("user", userID)
 		ctx.Next()

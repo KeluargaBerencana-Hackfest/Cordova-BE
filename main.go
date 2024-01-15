@@ -22,6 +22,5 @@ func main() {
 		defer wg.Done()
 		os.Exit(app.RunServer())
 	}()
-
 	wg.Wait()
 }

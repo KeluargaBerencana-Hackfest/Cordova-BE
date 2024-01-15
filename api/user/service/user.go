@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"time"
 
@@ -27,8 +28,9 @@ func NewUserService(userRepository repository.UserRepositoryImpl) UserServiceImp
 }
 
 func (us *UserService) UpdateUserData(c context.Context, req *domain.UserUpdateRequest, userId string, authClient *auth.Client) (*domain.User, error) {
-	user, err := us.ur.GetAccountByID(c, userId)
+	user, err := us.ur.GetUserByID(c, userId)
 	if err != nil {
+		log.Printf("[cordova-user-service] failed to get user from database. Error : %v\n", err)
 		return nil, err
 	}
 
@@ -37,6 +39,7 @@ func (us *UserService) UpdateUserData(c context.Context, req *domain.UserUpdateR
 	if req.Email != "" && user.Email != req.Email {
 		_, err := authClient.UpdateUser(c, userId, (&auth.UserToUpdate{}).Email(req.Email))
 		if err != nil {
+			log.Printf("[cordova-user-service] failed to update user (email) from firebase. Error : %v\n", err)
 			return nil, err
 		}
 	}
@@ -44,34 +47,41 @@ func (us *UserService) UpdateUserData(c context.Context, req *domain.UserUpdateR
 	if req.Name != "" && user.Name != req.Name {
 		_, err := authClient.UpdateUser(c, userId, (&auth.UserToUpdate{}).DisplayName(req.Name))
 		if err != nil {
+			log.Printf("[cordova-user-service] failed to update user (name) from firebase. Error : %v\n", err)
 			return nil, err
 		}
 	}
 
 	user, err = validateUpdateRequest(req, user)
 	if err != nil {
+		log.Printf("[cordova-user-service] failed to validate update request. Error : %v\n", err)
 		return nil, err
 	}
 
 	user, err = us.ur.UpdateUser(c, user)
 	if err != nil {
+		log.Printf("[cordova-user-service] failed to update user from database. Error : %v\n", err)
 		return nil, err
 	}
 	return user, nil
 }
 
 func (us *UserService) UploadPhoto(ctx context.Context, file multipart.File, id string) (*domain.User, error) {
-	user, err := us.ur.GetAccountByID(ctx, id)
+	user, err := us.ur.GetUserByID(ctx, id)
 	if err != nil {
+		log.Printf("[cordova-user-service] failed to get user from database. Error : %v\n", err)
 		return nil, err
 	}
 
 	formByte, err := io.ReadAll(file)
 	if err != nil {
+		log.Printf("[cordova-user-service] failed to read file. Error : %v\n", err)
 		return nil, err
 	}
+
 	photo, err := uploadPhotos(ctx, formByte, fmt.Sprintf("photo-%s", user.ID))
 	if err != nil {
+		log.Printf("[cordova-user-service] failed to upload photo profile. Error : %v\n", err)
 		return nil, err
 	}
 
@@ -79,6 +89,7 @@ func (us *UserService) UploadPhoto(ctx context.Context, file multipart.File, id 
 
 	user, err = us.ur.UpdateUser(ctx, user)
 	if err != nil {
+		log.Printf("[cordova-user-service] failed to update from database. Error : %v\n", err)
 		return nil, err
 	}
 
@@ -94,7 +105,7 @@ func validateUpdateRequest(req *domain.UserUpdateRequest, user *domain.User) (*d
 		user.Email = req.Email
 	}
 
-	if req.Birthday != "" && req.Birthday != user.Birthday.String() {
+	if req.Birthday != "" && req.Birthday != user.Birthday.Format("2006-01-02") {
 		parsedBirthday, err := time.Parse("2006-01-02", req.Birthday)
 		if err == nil {
 			user.Birthday = parsedBirthday

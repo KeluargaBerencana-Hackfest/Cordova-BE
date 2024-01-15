@@ -11,7 +11,7 @@ import (
 
 type UserRepositoryImpl interface {
 	UpdateUser(c context.Context, user *domain.User) (*domain.User, error)
-	GetAccountByID(c context.Context, val string) (*domain.User, error)
+	GetUserByID(c context.Context, val string) (*domain.User, error)
 }
 
 type UserRepository struct {
@@ -53,7 +53,7 @@ func (ur *UserRepository) UpdateUser(c context.Context, user *domain.User) (*dom
 	return user, nil
 }
 
-func (ur *UserRepository) GetAccountByID(c context.Context, val string) (*domain.User, error) {
+func (ur *UserRepository) GetUserByID(c context.Context, val string) (*domain.User, error) {
 	argKV := map[string]interface{}{
 		"id": val,
 	}
@@ -71,7 +71,7 @@ func (ur *UserRepository) GetAccountByID(c context.Context, val string) (*domain
 	query = ur.db.Rebind(query)
 
 	var user UserDB
-	if err := ur.db.QueryRowx(query, args...).StructScan(&user); err != nil {
+	if err := ur.db.QueryRowxContext(c, query, args...).StructScan(&user); err != nil {
 		return nil, err
 	}
 

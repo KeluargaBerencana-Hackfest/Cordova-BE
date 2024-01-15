@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,10 +12,12 @@ import (
 
 	"github.com/Ndraaa15/cordova/api/cholesterol/repository"
 	"github.com/Ndraaa15/cordova/domain"
+	"github.com/Ndraaa15/cordova/utils/activity"
+	"github.com/Ndraaa15/cordova/utils/enum"
 )
 
 type CholesterolServiceImpl interface {
-	CalculateCholesterol(c context.Context, id string, req *domain.CholesterolRequest) (*domain.Cholesterol, error)
+	CalculateCholesterol(c context.Context, id string, req *domain.CholesterolRequest) (*domain.CholesterolResponse, error)
 	GetCholesterolHistory(c context.Context, id string) (*domain.Cholesterol, error)
 }
 
@@ -27,46 +29,129 @@ func NewCholesterolService(cholesterolRepository repository.CholesterolRepositor
 	return &CholesterolService{cholesterolRepository}
 }
 
-func (cs *CholesterolService) CalculateCholesterol(c context.Context, id string, req *domain.CholesterolRequest) (*domain.Cholesterol, error) {
+func (cs *CholesterolService) CalculateCholesterol(c context.Context, id string, req *domain.CholesterolRequest) (*domain.CholesterolResponse, error) {
 	user, err := cs.cr.GetUserByID(c, id)
 	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to get user from database. Error : %v\n", err)
 		return nil, err
 	}
 
 	reqPredictMap, err := parseRequestPredict(req, user)
 	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to parse request predict. Error : %v\n", err)
 		return nil, err
 	}
 
 	reqPredictJson, err := json.Marshal(reqPredictMap)
 	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to marshal json request predict. Error : %v\n", err)
 		return nil, err
 	}
 
-	body := bytes.NewBuffer(reqPredictJson)
-	res, err := http.Post("https://cordova-model-j5ofojnjyq-as.a.run.app/predict", "application/json", body)
+	reqBody := bytes.NewBuffer(reqPredictJson)
+	res, err := http.Post("https://cordova-model-j5ofojnjyq-as.a.run.app/predict", "application/json", reqBody)
 	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to get prediction. Error : %v\n", err)
 		return nil, err
 	}
-
-	//to-do :
-	//generate recommended activity
-	//saved to database
 
 	var result map[string]interface{}
-	json.NewDecoder(res.Body).Decode(&result)
-	fmt.Println(result)
-	//map[prediction:64]
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to decode json response. Error : %v\n", err)
+		return nil, err
+	}
 
-	return nil, nil
+	percentage := result["prediction"].(float64)
+	log.Printf("[cordova-cholesterol-service] prediction percentage. Prediction : %v\n", percentage)
+
+	//Count Cholesterol Record By User ID, Month, and Year
+	parsedDate, err := time.Parse("2006-01-02", req.CholesterolTestDate)
+	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to parse time cholesterol test date. Error : %v\n", err)
+		return nil, err
+	}
+
+	count, err := cs.cr.CountCholesterolRecord(c, id, int(parsedDate.Month()), parsedDate.Year())
+	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to count cholesterol record. Error : %v\n", err)
+		return nil, err
+	}
+
+	//Check Count and Create or Update record
+	if count == 0 {
+		cholesterolNew := &domain.CholesterolDB{
+			UserID: id,
+		}
+
+		cholesterolParsed, err := parseCholesterol(req, cholesterolNew)
+		if err != nil {
+			log.Printf("[cordova-cholesterol-service] failed to parse cholesterol record. Error : %v\n", err)
+			return nil, err
+		}
+
+		cholesterolParsed.HeartRiskPercentage = percentage
+		_, err = cs.cr.SavedRecordCholesterol(c, id, cholesterolParsed)
+		if err != nil {
+			log.Printf("[cordova-cholesterol-service] failed to save cholesterol record. Error : %v\n", err)
+			return nil, err
+		}
+
+	} else {
+		cholesterolHistory, err := cs.cr.GetCholesterolHistory(c, id)
+		if err != nil {
+			log.Printf("[cordova-cholesterol-service] failed to get cholesterol history. Error : %v\n", err)
+			return nil, err
+		}
+
+		cholesterolParsed, err := parseCholesterol(req, cholesterolHistory[0])
+		if err != nil {
+			log.Printf("[cordova-cholesterol-service] failed to parse cholesterol record. Error : %v\n", err)
+			return nil, err
+		}
+
+		cholesterolHistory[0].HeartRiskPercentage = percentage
+		_, err = cs.cr.UpdateRecordCholesterol(c, id, cholesterolParsed)
+		if err != nil {
+			log.Printf("[cordova-cholesterol-service] failed to update cholesterol record. Error : %v\n", err)
+			return nil, err
+		}
+	}
+
+	//Recommendation Activity
+	recommendActivities := activity.GenerateRecommendedActivity(int(req.Cholesterol), 3, true)
+	_, err = cs.cr.SavedActivity(c, id, recommendActivities)
+	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to save recomendation activity. Error : %v\n", err)
+		return nil, err
+	}
+
+	cholesterolHistory, err := cs.GetCholesterolHistory(c, id)
+	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to get cholesterol history. Error : %v\n", err)
+		return nil, err
+	}
+
+	activities, err := cs.cr.GetAllActivity(c, id)
+	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to get all activity. Error : %v\n", err)
+		return nil, err
+	}
+
+	respCheck := &domain.CholesterolResponse{
+		Cholesterol: cholesterolHistory,
+		Activity:    activities,
+	}
+
+	return respCheck, nil
 }
 
 func (cs *CholesterolService) GetCholesterolHistory(c context.Context, id string) (*domain.Cholesterol, error) {
 	cholesterols := &domain.Cholesterol{}
-	cholesterolMap := make(map[uint64][]*domain.CholesterolDB)
+	cholesterolMap := make(map[int][]*domain.CholesterolDB)
 
 	cholesterol, err := cs.cr.GetCholesterolHistory(c, id)
 	if err != nil {
+		log.Printf("[cordova-cholesterol-service] failed to get all activity. Error : %v\n", err)
 		return nil, err
 	}
 
@@ -136,4 +221,38 @@ func parseRequestPredict(req *domain.CholesterolRequest, user *domain.User) (map
 		"bp_diastolic":                    bp_diastolic,
 	}
 	return request, nil
+}
+
+func getCholesterolLevel(cholesterol float64) string {
+	if cholesterol < 200 {
+		return enum.GoodString
+	} else if cholesterol >= 200 && cholesterol <= 239 {
+		return enum.WarningString
+	} else {
+		return enum.DangerString
+	}
+}
+
+func parseCholesterol(req *domain.CholesterolRequest, cholesterol *domain.CholesterolDB) (*domain.CholesterolDB, error) {
+	parsedDate, err := time.Parse("2006-01-02", req.CholesterolTestDate)
+	if err != nil {
+		return nil, err
+	}
+
+	if int(parsedDate.Month()) == cholesterol.Month && parsedDate.Year() == cholesterol.Year && cholesterol.AverageCholesterol > 0 {
+		cholesterol.AverageCholesterol = (cholesterol.AverageCholesterol + req.Cholesterol) / 2
+	} else {
+		cholesterol.Month = int(parsedDate.Month())
+		cholesterol.Year = parsedDate.Year()
+		cholesterol.AverageCholesterol = req.Cholesterol
+	}
+
+	cholesterol.LastCholesterolRecord = req.Cholesterol
+	cholesterol.CholesterolLevel = getCholesterolLevel(req.Cholesterol)
+	cholesterol.Triglycerides = req.Triglycerides
+	cholesterol.HeartRate = req.HeartRate
+	cholesterol.BloodPressure = req.BloodPressure
+	cholesterol.CholesterolTestDate = parsedDate
+
+	return cholesterol, nil
 }

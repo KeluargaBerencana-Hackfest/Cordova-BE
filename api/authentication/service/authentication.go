@@ -2,17 +2,19 @@ package service
 
 import (
 	"context"
+	"log"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/Ndraaa15/cordova/api/authentication/repository"
 	"github.com/Ndraaa15/cordova/config/email"
 	"github.com/Ndraaa15/cordova/domain"
 	"github.com/Ndraaa15/cordova/utils/errors"
+	"github.com/Ndraaa15/cordova/utils/validator"
 )
 
 type AuthServiceImpl interface {
-	ValidateAccount(c context.Context, id string, client *auth.Client) (*domain.User, error)
-	RegisterAccount(c context.Context, req *domain.SignupRequest, client *auth.Client) (string, error)
+	ValidateUser(c context.Context, id string, client *auth.Client) (*domain.User, error)
+	RegisterUser(c context.Context, req *domain.SignupRequest, client *auth.Client) (string, error)
 }
 
 type AuthService struct {
@@ -23,9 +25,10 @@ func NewAuthService(authRepository repository.AuthRepositoryImpl) AuthServiceImp
 	return &AuthService{authRepository}
 }
 
-func (as *AuthService) ValidateAccount(c context.Context, id string, authClient *auth.Client) (*domain.User, error) {
+func (as *AuthService) ValidateUser(c context.Context, id string, authClient *auth.Client) (*domain.User, error) {
 	user, err := authClient.GetUser(c, id)
 	if err != nil {
+		log.Printf("[cordova-authentication-service] failed to get user from firebase. Error : %v\n", err)
 		return nil, errors.ErrFailedGetAccount
 	}
 
@@ -33,30 +36,34 @@ func (as *AuthService) ValidateAccount(c context.Context, id string, authClient 
 		return nil, errors.ErrUserNotVerified
 	}
 
-	count, err := as.ar.CountEmailAccount(&c, user.Email)
+	count, err := as.ar.CountEmailAccount(c, user.Email)
 	if err != nil {
+		log.Printf("[cordova-authentication-service] failed to count email user. Error : %v\n", err)
 		return nil, errors.ErrFailedCountEmailUser
 	}
 
 	if count != 0 {
-		userRecord, err := as.ar.GetAccountByID(c, user.UID)
+		userRecord, err := as.ar.GetUserByID(c, user.UID)
 		if err != nil {
+			log.Printf("[cordova-authentication-service] failed to get user from database. Error : %v\n", err)
 			return nil, errors.ErrFailedGetAccount
 		}
 		return userRecord, nil
 	}
 
-	newUser, err := as.ar.SaveAccount(c, parseUserReq(user))
+	newUser, err := as.ar.SaveUser(c, parseUserReq(user))
 	if err != nil {
+		log.Printf("[cordova-authentication-service] failed to save user to database. Error : %v\n", err)
 		return nil, errors.ErrFailedSaveAccount
 	}
 
 	return newUser, nil
 }
 
-func (as *AuthService) RegisterAccount(c context.Context, req *domain.SignupRequest, authClient *auth.Client) (string, error) {
-	count, err := as.ar.CountEmailAccount(&c, req.Email)
+func (as *AuthService) RegisterUser(c context.Context, req *domain.SignupRequest, authClient *auth.Client) (string, error) {
+	count, err := as.ar.CountEmailAccount(c, req.Email)
 	if err != nil {
+		log.Printf("[cordova-authentication-service] failed to count email user. Error : %v\n", err)
 		return "", errors.ErrFailedCountEmailUser
 	}
 
@@ -64,26 +71,32 @@ func (as *AuthService) RegisterAccount(c context.Context, req *domain.SignupRequ
 		return "", errors.ErrEmailAlreadyExist
 	}
 
-	if req.Password != req.ConfirmPassword {
-		return "", errors.ErrPasswordNotSame
+	if !validateRegisterReq(req) {
+		return "", errors.ErrRegisterRequestNotValid
 	}
 
 	resp, err := authClient.CreateUser(c, (&auth.UserToCreate{}).DisplayName(req.Name).Email(req.Email).Password(req.Password))
 	if err != nil {
+		log.Printf("[cordova-authentication-service] failed to create user to firebase. Error : %v\n", err)
 		return "", errors.ErrFailedCreateAccount
 	}
 
-	_, err = as.ar.SaveAccount(c, parseUserReq(resp))
+	_, err = as.ar.SaveUser(c, parseUserReq(resp))
 	if err != nil {
+		log.Printf("[cordova-authentication-service] failed to save user to database. Error : %v\n", err)
 		return "", err
 	}
 
 	link, err := authClient.EmailVerificationLink(context.Background(), req.Email)
 	if err != nil {
-		return "", errors.ErrFailedCreateAccount
+		log.Printf("[cordova-authentication-service] failed to create verification link. Error : %v\n", err)
+		return "", err
 	}
 
-	go sendEmailVerification(req, link)
+	if err := sendEmailVerification(req, link); err != nil {
+		log.Printf("[cordova-authentication-service] failed to send email verification. Error : %v\n", err)
+		return "", err
+	}
 
 	return resp.UID, nil
 }
@@ -109,4 +122,20 @@ func parseUserReq(oauth *auth.UserRecord) *domain.User {
 		Name:  oauth.DisplayName,
 		Email: oauth.Email,
 	}
+}
+
+func validateRegisterReq(req *domain.SignupRequest) bool {
+	if req.Name == "" {
+		return false
+	}
+
+	if req.Email == "" || !validator.ValidateEmail(req.Email) {
+		return false
+	}
+
+	if req.Password == "" || !validator.ValidatePassword(req.Password) || req.Password != req.ConfirmPassword {
+		return false
+	}
+
+	return true
 }

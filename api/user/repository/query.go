@@ -1,7 +1,8 @@
 package repository
 
 const UpdateUser = `
-UPDATE users
+UPDATE 
+	users
 SET
 	name = :name,
 	email = :email,
@@ -21,7 +22,8 @@ SET
 	medication_use = :medication_use,
 	stress_level = :stress_level,
 	photo_profile = :photo_profile
-WHERE id = :id
+WHERE 
+	id = :id
 `
 
 const GetAccountByID = `
@@ -47,6 +49,8 @@ SELECT
 	photo_profile,
 	created_at,
 	updated_at
-FROM users 
-WHERE id = :id
+FROM 
+	users 
+WHERE 
+	id = :id
 `

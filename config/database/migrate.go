@@ -42,13 +42,40 @@ CREATE TABLE IF NOT EXISTS cholesterols (
     year BIGINT,
     heart_risk_percentage DOUBLE PRECISION,
     cholesterol_test_date DATE,
-    PRIMARY KEY (user_id, year, month),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, year, month)
+);`
+
+const activityTable = `
+CREATE TABLE IF NOT EXISTS activities (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) REFERENCES users(id),
+    activity VARCHAR(255),
+    description TEXT,
+    total_sub_activity INTEGER,
+    finished_sub_activity INTEGER,
+    image VARCHAR(255),
+    is_done BOOLEAN,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);`
+
+const subActivityTable = `
+CREATE TABLE IF NOT EXISTS sub_activities (
+    id SERIAL PRIMARY KEY,
+    activity_id INTEGER REFERENCES activities(id) ON DELETE CASCADE,
+    sub_activity VARCHAR(255),
+    description TEXT,
+    ingredients []TEXT,
+    steps []TEXT,
+    is_done BOOLEAN,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );`
 
 func (db *ClientDB) MigrateDatabase() error {
-	tables := []string{userTable, cholesterolTable}
+	tables := []string{userTable, cholesterolTable, activityTable, subActivityTable}
 	for _, table := range tables {
 		_, err := db.Exec(table)
 		if err != nil {
