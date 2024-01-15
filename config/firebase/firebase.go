@@ -2,11 +2,11 @@ package firebase
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
@@ -22,7 +22,7 @@ func InitFirebase() (*FirebaseClient, error) {
 		"type":                        os.Getenv("FIREBASE_TYPE"),
 		"project_id":                  os.Getenv("FIREBASE_PROJECT_ID"),
 		"private_key_id":              os.Getenv("FIREBASE_PRIVATE_KEY_ID"),
-		"private_key":                 strings.Replace(os.Getenv("FIREBASE_PRIVATE_KEY"), "/\n/g", "\n", -1),
+		"private_key":                 base64.StdEncoding.EncodeToString([]byte(os.Getenv("FIREBASE_PRIVATE_KEY"))),
 		"client_email":                os.Getenv("FIREBASE_CLIENT_EMAIL"),
 		"client_id":                   os.Getenv("FIREBASE_CLIENT_ID"),
 		"auth_uri":                    os.Getenv("FIREBASE_AUTH_URI"),
