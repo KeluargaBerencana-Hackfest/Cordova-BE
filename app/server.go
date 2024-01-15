@@ -78,6 +78,10 @@ func NewServer() (*Server, error) {
 
 func (s *Server) StartServer() {
 	s.engine.Use(middleware.CORS())
+	s.engine.GET("/health", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{"status": "I'm alive"})
+	})
+
 	for _, handler := range s.handlers {
 		handler.Mount(s.engine.Group("/api/v1"))
 	}

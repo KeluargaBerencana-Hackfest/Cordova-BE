@@ -2,6 +2,7 @@ package firebase
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -16,7 +17,26 @@ type FirebaseClient struct {
 }
 
 func InitFirebase() (*FirebaseClient, error) {
-	opt := option.WithCredentialsFile("./firebase-client-key.json")
+	serviceAccountCredentials := map[string]interface{}{
+		"type":                        os.Getenv("FIREBASE_TYPE"),
+		"project_id":                  os.Getenv("FIREBASE_PROJECT_ID"),
+		"private_key_id":              os.Getenv("FIREBASE_PRIVATE_KEY_ID"),
+		"private_key":                 os.Getenv("FIREBASE_PRIVATE_KEY"),
+		"client_email":                os.Getenv("FIREBASE_CLIENT_EMAIL"),
+		"client_id":                   os.Getenv("FIREBASE_CLIENT_ID"),
+		"auth_uri":                    os.Getenv("FIREBASE_AUTH_URI"),
+		"token_uri":                   os.Getenv("FIREBASE_TOKEN_URI"),
+		"auth_provider_x509_cert_url": os.Getenv("FIREBASE_AUTH_PROVIDER_x509_CERT_URL"),
+		"client_x509_cert_url":        os.Getenv("FIREBASE_CLIENT_x509_CERT_URL"),
+		"universe_domain":             os.Getenv("FIREBASE_UNIVERSE_DOMAIN"),
+	}
+
+	credsJson, err := json.Marshal(serviceAccountCredentials)
+	if err != nil {
+		return nil, err
+	}
+
+	opt := option.WithCredentialsJSON(credsJson)
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing app: %v\n", err)
