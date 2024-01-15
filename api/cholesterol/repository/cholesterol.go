@@ -9,6 +9,7 @@ import (
 	"github.com/Ndraaa15/cordova/config/database"
 	"github.com/Ndraaa15/cordova/domain"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type CholesterolRepositoryImpl interface {
@@ -163,7 +164,7 @@ func (cr *CholesterolRepository) CountCholesterolRecord(c context.Context, id st
 	return countEmail, nil
 }
 
-func (cr *CholesterolRepository) SavedActivity(c context.Context, id string, activity []*domain.Activity) ([]*domain.Activity, error) {
+func (cr *CholesterolRepository) SavedActivity(c context.Context, userID string, activity []*domain.Activity) ([]*domain.Activity, error) {
 	txClient, err := cr.db.Beginx()
 	if err != nil {
 		return nil, err
@@ -180,7 +181,7 @@ func (cr *CholesterolRepository) SavedActivity(c context.Context, id string, act
 
 	for _, value := range activity {
 		argKV := map[string]interface{}{
-			"user_id":               id,
+			"user_id":               userID,
 			"activity":              value.NameActivity,
 			"description":           value.Description,
 			"total_sub_activity":    value.SubActivities.Count,
@@ -244,6 +245,9 @@ func (cr *CholesterolRepository) SavedActivity(c context.Context, id string, act
 				argKV := map[string]interface{}{
 					"activity_id":  activityID,
 					"sub_activity": value.SubActivities.NameSubActivity,
+					"description":  value.SubActivities.Description,
+					"ingredients":  value.SubActivities.Ingredients,
+					"steps":        value.SubActivities.Steps,
 					"is_done":      false,
 				}
 
@@ -317,8 +321,8 @@ func (cr *CholesterolRepository) GetAllActivity(c context.Context, id string) ([
 			subActivityActivityID  int
 			subActivity            string
 			descriptionSubActivity string
-			ingredientsSubActivity []string
-			stepsSubActivity       []string
+			ingredientsSubActivity pq.StringArray
+			stepsSubActivity       pq.StringArray
 			isDoneSubActivity      bool
 			createdAtSubActivity   time.Time
 			updatedAtSubActivity   time.Time

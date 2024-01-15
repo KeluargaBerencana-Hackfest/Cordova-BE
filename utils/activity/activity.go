@@ -76,6 +76,9 @@ func listSubActivity(activity string) domain.SubActivity {
 			{
 				NameSubActivity: "Jogging Day",
 				IsSequential:    true,
+				Description:     "-",
+				Ingredients:     []string{""},
+				Steps:           []string{""},
 				Count:           5,
 			},
 		},
@@ -83,8 +86,8 @@ func listSubActivity(activity string) domain.SubActivity {
 			{
 				NameSubActivity: "Eat Avocado",
 				Description:     "...",
-				Ingredients:     []string{"Avocado"},
-				Steps:           []string{"Eat"},
+				Ingredients:     []string{"Avocado", "Salt", "Pepper", "Lemon", "Bread"},
+				Steps:           []string{"Eat", "Eat", "Eat", "Eat", "Eat"},
 				IsSequential:    false,
 				Count:           1,
 			},
@@ -93,6 +96,9 @@ func listSubActivity(activity string) domain.SubActivity {
 			{
 				NameSubActivity: "Cycling Day",
 				IsSequential:    true,
+				Description:     "-",
+				Ingredients:     []string{""},
+				Steps:           []string{""},
 				Count:           5,
 			},
 		},
