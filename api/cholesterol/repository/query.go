@@ -138,6 +138,7 @@ INSERT INTO sub_activities (
 	activity_id,
 	sub_activity,
 	description,
+	duration,
 	ingredients,
 	steps,
 	is_done
@@ -145,6 +146,7 @@ INSERT INTO sub_activities (
 		:activity_id,
 		:sub_activity,
 		:description,
+		:duration,
 		ARRAY[:ingredients],
 		ARRAY[:steps],
 		:is_done
@@ -169,6 +171,7 @@ SELECT
 		s.description AS sub_activity_description,
 		s.ingredients,
 		s.steps,
+		s.duration,
     s.is_done AS sub_activity_is_done,
     s.created_at AS sub_activity_created_at,
     s.updated_at AS sub_activity_updated_at
@@ -177,7 +180,7 @@ FROM
 LEFT JOIN
     sub_activities s ON a.id = s.activity_id
 WHERE
-		a.user_id = :user_id
+		a.user_id = :user_id AND s.id IS NOT NULL
 ORDER BY
     a.id, s.id;
 `

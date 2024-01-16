@@ -94,28 +94,32 @@ func (as *ActivityService) ChecklistActivity(c context.Context, activityID int) 
 		return nil, err
 	}
 
-	subActivity.IsDone = true
-
-	_, err = as.ar.UpdateSubActivity(c, subActivity)
-	if err != nil {
-		log.Printf("[cordova-activity-service] failed to update sub activity. Error : %v\n", err)
-		return nil, err
-	}
-
 	activity, err := as.ar.GetActivityByID(c, subActivity.ActivityID)
 	if err != nil {
 		log.Printf("[cordova-activity-service] failed to get activity. Error : %v\n", err)
 		return nil, err
 	}
 
-	activity.FinishedSubActivity += 1
-	if activity.FinishedSubActivity == activity.TotalSubActivity {
+	if (activity.FinishedSubActivity + 1) == activity.TotalSubActivity {
+		activity.FinishedSubActivity += 1
 		activity.IsDone = true
+	} else if (activity.FinishedSubActivity + 1) < activity.TotalSubActivity {
+		activity.FinishedSubActivity += 1
+		activity.IsDone = false
+	} else if (activity.FinishedSubActivity + 1) > activity.TotalSubActivity {
+		return nil, errors.ErrAllActivityAlreadyDone
 	}
 
 	_, err = as.ar.UpdateActivity(c, activity)
 	if err != nil {
 		log.Printf("[cordova-activity-service] failed to update activity. Error : %v\n", err)
+		return nil, err
+	}
+
+	subActivity.IsDone = true
+	_, err = as.ar.UpdateSubActivity(c, subActivity)
+	if err != nil {
+		log.Printf("[cordova-activity-service] failed to update sub activity. Error : %v\n", err)
 		return nil, err
 	}
 
@@ -135,28 +139,30 @@ func (as *ActivityService) UnchecklistActivity(c context.Context, activityID int
 		return nil, err
 	}
 
-	subActivity.IsDone = false
-
-	_, err = as.ar.UpdateSubActivity(c, subActivity)
-	if err != nil {
-		log.Printf("[cordova-activity-service] failed to update sub activity. Error : %v\n", err)
-		return nil, err
-	}
-
 	activity, err := as.ar.GetActivityByID(c, subActivity.ActivityID)
 	if err != nil {
 		log.Printf("[cordova-activity-service] failed to get activity. Error : %v\n", err)
 		return nil, err
 	}
 
-	activity.FinishedSubActivity -= 1
-	if activity.FinishedSubActivity != activity.TotalSubActivity {
+	if (activity.FinishedSubActivity-1) < activity.TotalSubActivity && (activity.FinishedSubActivity-1) >= 0 {
+		activity.FinishedSubActivity -= 1
 		activity.IsDone = false
+	} else if (activity.FinishedSubActivity - 1) < 0 {
+		return nil, errors.ErrCantUnchelcklistActivity
 	}
 
 	_, err = as.ar.UpdateActivity(c, activity)
 	if err != nil {
 		log.Printf("[cordova-activity-service] failed to update activity. Error : %v\n", err)
+		return nil, err
+	}
+
+	subActivity.IsDone = false
+
+	_, err = as.ar.UpdateSubActivity(c, subActivity)
+	if err != nil {
+		log.Printf("[cordova-activity-service] failed to update sub activity. Error : %v\n", err)
 		return nil, err
 	}
 

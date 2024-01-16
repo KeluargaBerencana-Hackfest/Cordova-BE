@@ -15,8 +15,10 @@ SELECT
     s.id AS sub_activity_id,
     s.activity_id AS sub_activity_activity_id,
     s.sub_activity,
+		s.description AS sub_activity_description,
 		s.ingredients,
 		s.steps,
+		s.duration,
     s.is_done AS sub_activity_is_done,
     s.created_at AS sub_activity_created_at,
     s.updated_at AS sub_activity_updated_at
@@ -25,7 +27,7 @@ FROM
 LEFT JOIN
     sub_activities s ON a.id = s.activity_id
 WHERE
-		a.user_id = :user_id
+		a.user_id = :user_id AND s.id IS NOT NULL
 ORDER BY
     a.id, s.id;
 `
@@ -34,10 +36,6 @@ const UpdateSubActivity = `
 UPDATE 
 	sub_activities
 SET
-	sub_activity = :sub_activity,
-	description = :description,
-	ingredients = ARRAY[:ingredients],
-	steps = ARRAY[:steps],
 	is_done = :is_done
 WHERE 
 	id = :id
@@ -65,6 +63,7 @@ SELECT
 	description,
 	ingredients,
 	steps,
+	duration,
 	is_done,
 	created_at,
 	updated_at
@@ -105,13 +104,12 @@ SELECT
 	year,
 	heart_risk_percentage,
 	cholesterol_test_date,
-	alcohol_consumption,
 	created_at,
 	updated_at
 FROM 
 	cholesterols 
 WHERE 
-	id = :id 
+	user_id = :user_id 
 AND 
 	month = :month 
 AND 
@@ -142,14 +140,18 @@ const SavedSubActivity = `
 INSERT INTO sub_activities (
 	activity_id,
 	sub_activity,
+	description,
 	ingredients,
 	steps,
+	duration,
 	is_done
 ) VALUES (
 		:activity_id,
 		:sub_activity,
+		:description,
 		ARRAY[:ingredients],
 		ARRAY[:steps],
+		:duration,
 		:is_done
 ) RETURNING id
 `

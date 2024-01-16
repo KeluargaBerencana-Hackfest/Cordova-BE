@@ -7,6 +7,9 @@ import (
 	"os"
 	"time"
 
+	ActivityHandler "github.com/Ndraaa15/cordova/api/activity/handler/http"
+	ActivityRepository "github.com/Ndraaa15/cordova/api/activity/repository"
+	ActivityService "github.com/Ndraaa15/cordova/api/activity/service"
 	AuthHandler "github.com/Ndraaa15/cordova/api/authentication/handler/http"
 	AuthRepository "github.com/Ndraaa15/cordova/api/authentication/repository"
 	AuthService "github.com/Ndraaa15/cordova/api/authentication/service"
@@ -71,7 +74,11 @@ func NewServer() (*Server, error) {
 	cholesterolService := CholesterolService.NewCholesterolService(cholesterolRepository)
 	cholesterolHandler := CholesterolHandler.NewCholesterolHandler(cholesterolService)
 
-	s.handlers = []Handler{authHandler, userHandler, cholesterolHandler}
+	activityRepository := ActivityRepository.NewActivityRepository(db)
+	activityService := ActivityService.NewActivityService(activityRepository)
+	activityHandler := ActivityHandler.NewActivityHandler(activityService)
+
+	s.handlers = []Handler{authHandler, userHandler, cholesterolHandler, activityHandler}
 
 	return s, nil
 }

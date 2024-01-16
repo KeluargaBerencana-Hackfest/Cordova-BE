@@ -9,6 +9,7 @@ import (
 	"github.com/Ndraaa15/cordova/config/database"
 	"github.com/Ndraaa15/cordova/domain"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type ActivityRepositoryImpl interface {
@@ -26,7 +27,7 @@ type ActivityRepository struct {
 	db *database.ClientDB
 }
 
-func NewActivitylRepository(db *database.ClientDB) ActivityRepositoryImpl {
+func NewActivityRepository(db *database.ClientDB) ActivityRepositoryImpl {
 	return &ActivityRepository{db}
 }
 
@@ -46,6 +47,7 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 	}
 
 	query = ar.db.Rebind(query)
+
 	rows, err := ar.db.QueryxContext(c, query, args...)
 	if err != nil {
 		return nil, err
@@ -66,12 +68,16 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 			createdAtActivity   time.Time
 			updatedAtActivity   time.Time
 
-			subActivityID         int
-			subActivityActivityID int
-			subActivity           string
-			isDoneSubActivity     bool
-			createdAtSubActivity  time.Time
-			updatedAtSubActivity  time.Time
+			subActivityID          int
+			subActivityActivityID  int
+			subActivity            string
+			descriptionSubActivity string
+			ingredientsSubActivity []string
+			stepsSubActivity       []string
+			durationSubActivity    int
+			isDoneSubActivity      bool
+			createdAtSubActivity   time.Time
+			updatedAtSubActivity   time.Time
 		)
 
 		if err := rows.Scan(
@@ -88,6 +94,10 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 			&subActivityID,
 			&subActivityActivityID,
 			&subActivity,
+			&descriptionSubActivity,
+			pq.Array(&ingredientsSubActivity),
+			pq.Array(&stepsSubActivity),
+			&durationSubActivity,
 			&isDoneSubActivity,
 			&createdAtSubActivity,
 			&updatedAtSubActivity,
@@ -102,6 +112,10 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 					ID:          subActivityID,
 					ActivityID:  subActivityActivityID,
 					SubActivity: subActivity,
+					Description: descriptionSubActivity,
+					Ingredients: ingredientsSubActivity,
+					Steps:       stepsSubActivity,
+					Duration:    durationSubActivity,
 					IsDone:      isDoneSubActivity,
 					CreatedAt:   createdAtSubActivity,
 					UpdatedAt:   updatedAtSubActivity,
@@ -131,6 +145,10 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 				ID:          subActivityID,
 				ActivityID:  subActivityActivityID,
 				SubActivity: subActivity,
+				Description: descriptionSubActivity,
+				Ingredients: ingredientsSubActivity,
+				Steps:       stepsSubActivity,
+				Duration:    durationSubActivity,
 				IsDone:      isDoneSubActivity,
 				CreatedAt:   createdAtSubActivity,
 				UpdatedAt:   updatedAtSubActivity,
@@ -146,14 +164,16 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 
 func (ar *ActivityRepository) UpdateSubActivity(c context.Context, subActivity *domain.SubActivityDB) (*domain.SubActivityDB, error) {
 	argKV := map[string]interface{}{
-		"id":           subActivity.ID,
-		"sub_activity": subActivity.SubActivity,
-		"ingredients":  subActivity.Ingredients,
-		"steps":        subActivity.Steps,
-		"is_done":      subActivity.IsDone,
+		"id": subActivity.ID,
+		// "sub_activity": subActivity.SubActivity,
+		// "description":  subActivity.Description,
+		// "ingredients":  subActivity.Ingredients,
+		// "steps":        subActivity.Steps,
+		// "duration":     subActivity.Duration,
+		"is_done": subActivity.IsDone,
 	}
 
-	_, err := ar.db.NamedExecContext(c, UpdateActivity, argKV)
+	_, err := ar.db.NamedExecContext(c, UpdateSubActivity, argKV)
 	if err != nil {
 		return nil, err
 	}
@@ -178,12 +198,12 @@ func (ar *ActivityRepository) GetSubActivityByID(c context.Context, subActivityI
 
 	query = ar.db.Rebind(query)
 
-	var subActivity *domain.SubActivityDB
+	var subActivity SubActivity
 	if err := ar.db.QueryRowxContext(c, query, args...).StructScan(&subActivity); err != nil {
 		return nil, err
 	}
 
-	return subActivity, nil
+	return subActivity.parse(), nil
 }
 
 func (ar *ActivityRepository) UpdateActivity(c context.Context, activity *domain.ActivityDB) (*domain.ActivityDB, error) {
@@ -222,19 +242,19 @@ func (ar *ActivityRepository) GetActivityByID(c context.Context, activityID int)
 
 	query = ar.db.Rebind(query)
 
-	var subActivity *domain.ActivityDB
+	var subActivity domain.ActivityDB
 	if err := ar.db.QueryRowxContext(c, query, args...).StructScan(&subActivity); err != nil {
 		return nil, err
 	}
 
-	return subActivity, nil
+	return &subActivity, nil
 }
 
 func (ar *ActivityRepository) GetUserCholesterolByID(c context.Context, userID string, month, year int) (*domain.CholesterolDB, error) {
 	argKV := map[string]interface{}{
-		"id":    userID,
-		"month": month,
-		"year":  year,
+		"user_id": userID,
+		"month":   month,
+		"year":    year,
 	}
 
 	query, args, err := sqlx.Named(GetUserByID, argKV)
@@ -249,15 +269,15 @@ func (ar *ActivityRepository) GetUserCholesterolByID(c context.Context, userID s
 
 	query = ar.db.Rebind(query)
 
-	var cholesterol *domain.CholesterolDB
+	var cholesterol domain.CholesterolDB
 	if err := ar.db.QueryRowx(query, args...).StructScan(&cholesterol); err != nil {
 		return nil, err
 	}
 
-	return cholesterol, nil
+	return &cholesterol, nil
 }
 
-func (ar *ActivityRepository) SavedActivity(c context.Context, id string, activity []*domain.Activity) ([]*domain.Activity, error) {
+func (ar *ActivityRepository) SavedActivity(c context.Context, userID string, activity []*domain.Activity) ([]*domain.Activity, error) {
 	txClient, err := ar.db.Beginx()
 	if err != nil {
 		return nil, err
@@ -274,7 +294,7 @@ func (ar *ActivityRepository) SavedActivity(c context.Context, id string, activi
 
 	for _, value := range activity {
 		argKV := map[string]interface{}{
-			"user_id":               id,
+			"user_id":               userID,
 			"activity":              value.NameActivity,
 			"description":           value.Description,
 			"total_sub_activity":    value.SubActivities.Count,
@@ -309,8 +329,10 @@ func (ar *ActivityRepository) SavedActivity(c context.Context, id string, activi
 				argKV := map[string]interface{}{
 					"activity_id":  activityID,
 					"sub_activity": fmt.Sprintf("%s %d", value.SubActivities.NameSubActivity, i+1),
+					"description":  value.SubActivities.Description,
 					"ingredients":  value.SubActivities.Ingredients,
 					"steps":        value.SubActivities.Steps,
+					"duration":     value.SubActivities.Duration,
 					"is_done":      false,
 				}
 
@@ -337,6 +359,10 @@ func (ar *ActivityRepository) SavedActivity(c context.Context, id string, activi
 				argKV := map[string]interface{}{
 					"activity_id":  activityID,
 					"sub_activity": value.SubActivities.NameSubActivity,
+					"description":  value.SubActivities.Description,
+					"ingredients":  value.SubActivities.Ingredients,
+					"steps":        value.SubActivities.Steps,
+					"duration":     value.SubActivities.Duration,
 					"is_done":      false,
 				}
 
@@ -380,4 +406,31 @@ func (ar *ActivityRepository) DeleteActivity(c context.Context, activityID int) 
 	}
 
 	return nil
+}
+
+type SubActivity struct {
+	ID          int            `db:"id"`
+	ActivityID  int            `db:"activity_id"`
+	SubActivity string         `db:"sub_activity"`
+	Description string         `db:"description"`
+	Ingredients pq.StringArray `db:"ingredients"`
+	Steps       pq.StringArray `db:"steps"`
+	Duration    int            `db:"duration"`
+	IsDone      bool           `db:"is_done"`
+	CreatedAt   time.Time      `db:"created_at"`
+	UpdatedAt   time.Time      `db:"updated_at"`
+}
+
+func (sa *SubActivity) parse() *domain.SubActivityDB {
+	return &domain.SubActivityDB{
+		ID:          sa.ID,
+		ActivityID:  sa.ActivityID,
+		SubActivity: sa.SubActivity,
+		Ingredients: sa.Ingredients,
+		Steps:       sa.Steps,
+		Duration:    sa.Duration,
+		IsDone:      sa.IsDone,
+		CreatedAt:   sa.CreatedAt,
+		UpdatedAt:   sa.UpdatedAt,
+	}
 }

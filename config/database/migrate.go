@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS sub_activities (
     description TEXT,
     ingredients TEXT[],
     steps TEXT[],
+    duration INTEGER,
     is_done BOOLEAN,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP

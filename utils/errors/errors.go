@@ -34,4 +34,8 @@ var (
 	ErrNotYetActivityDone = errors.New("NOT_YET_ACTIVITY_DONE")
 
 	ErrRegisterRequestNotValid = errors.New("REGISTER_REQUEST_NOT_VALID")
+
+	ErrAllActivityAlreadyDone = errors.New("ALL_ACTIVITY_ALREADY_DONE")
+
+	ErrCantUnchelcklistActivity = errors.New("CANT_UNCHECKLIST_ACTIVITY")
 )

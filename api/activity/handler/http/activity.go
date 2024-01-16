@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Ndraaa15/cordova/api/activity/service"
+	"github.com/Ndraaa15/cordova/middleware"
 	"github.com/Ndraaa15/cordova/utils/errors"
 	"github.com/Ndraaa15/cordova/utils/response"
 	"github.com/gin-gonic/gin"
@@ -23,10 +24,10 @@ func NewActivityHandler(activityService service.ActivityServiceImpl) *ActivityHa
 
 func (ah *ActivityHandler) Mount(s *gin.RouterGroup) {
 	activity := s.Group("/activity")
-	activity.POST("/checklist/:sub_activity_id", ah.ChecklistActivity)
-	activity.POST("/unchecklist/:sub_activity_id", ah.UnchecklistActivity)
-	activity.GET("/all", ah.GetAllActivity)
-	activity.POST("/regenerate", ah.RegenerateActivity)
+	activity.PUT("/checklist/:sub_activity_id", middleware.ValidateJWTToken(), ah.ChecklistActivity)
+	activity.PUT("/unchecklist/:sub_activity_id", middleware.ValidateJWTToken(), ah.UnchecklistActivity)
+	activity.GET("/all", middleware.ValidateJWTToken(), ah.GetAllActivity)
+	activity.PUT("/regenerate", middleware.ValidateJWTToken(), ah.RegenerateActivity)
 }
 
 func (ah *ActivityHandler) ChecklistActivity(ctx *gin.Context) {

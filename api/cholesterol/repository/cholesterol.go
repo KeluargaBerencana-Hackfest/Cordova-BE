@@ -219,6 +219,7 @@ func (cr *CholesterolRepository) SavedActivity(c context.Context, userID string,
 					"description":  value.SubActivities.Description,
 					"ingredients":  value.SubActivities.Ingredients,
 					"steps":        value.SubActivities.Steps,
+					"duration":     value.SubActivities.Duration,
 					"is_done":      false,
 				}
 
@@ -248,6 +249,7 @@ func (cr *CholesterolRepository) SavedActivity(c context.Context, userID string,
 					"description":  value.SubActivities.Description,
 					"ingredients":  value.SubActivities.Ingredients,
 					"steps":        value.SubActivities.Steps,
+					"duration":     value.SubActivities.Duration,
 					"is_done":      false,
 				}
 
@@ -297,7 +299,7 @@ func (cr *CholesterolRepository) GetAllActivity(c context.Context, id string) ([
 
 	query = cr.db.Rebind(query)
 
-	rows, err := cr.db.Queryx(query, args...)
+	rows, err := cr.db.QueryxContext(c, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -321,8 +323,9 @@ func (cr *CholesterolRepository) GetAllActivity(c context.Context, id string) ([
 			subActivityActivityID  int
 			subActivity            string
 			descriptionSubActivity string
-			ingredientsSubActivity pq.StringArray
-			stepsSubActivity       pq.StringArray
+			ingredientsSubActivity []string
+			stepsSubActivity       []string
+			durationSubActivity    int
 			isDoneSubActivity      bool
 			createdAtSubActivity   time.Time
 			updatedAtSubActivity   time.Time
@@ -343,8 +346,9 @@ func (cr *CholesterolRepository) GetAllActivity(c context.Context, id string) ([
 			&subActivityActivityID,
 			&subActivity,
 			&descriptionSubActivity,
-			&ingredientsSubActivity,
-			&stepsSubActivity,
+			pq.Array(&ingredientsSubActivity),
+			pq.Array(&stepsSubActivity),
+			&durationSubActivity,
 			&isDoneSubActivity,
 			&createdAtSubActivity,
 			&updatedAtSubActivity,
@@ -361,6 +365,7 @@ func (cr *CholesterolRepository) GetAllActivity(c context.Context, id string) ([
 					SubActivity: subActivity,
 					Ingredients: ingredientsSubActivity,
 					Steps:       stepsSubActivity,
+					Duration:    durationSubActivity,
 					IsDone:      isDoneSubActivity,
 					CreatedAt:   createdAtSubActivity,
 					UpdatedAt:   updatedAtSubActivity,
@@ -390,6 +395,9 @@ func (cr *CholesterolRepository) GetAllActivity(c context.Context, id string) ([
 				ID:          subActivityID,
 				ActivityID:  subActivityActivityID,
 				SubActivity: subActivity,
+				Ingredients: ingredientsSubActivity,
+				Steps:       stepsSubActivity,
+				Duration:    durationSubActivity,
 				IsDone:      isDoneSubActivity,
 				CreatedAt:   createdAtSubActivity,
 				UpdatedAt:   updatedAtSubActivity,
