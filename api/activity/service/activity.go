@@ -67,11 +67,15 @@ func (as *ActivityService) RegenerateActivity(c context.Context, userID string) 
 		}
 	}
 
-	if count == 0 {
+	if count == 0 && activities != nil {
 		return activities, errors.ErrNotYetActivityDone
+	} else if count == 0 && activities == nil {
+		count = 3
+		isHealhtyFoodDone = true
 	}
 
 	reccomendedActivity := activity.GenerateRecommendedActivity(int(userCholesterol.LastCholesterolRecord), count, isHealhtyFoodDone)
+	log.Println(reccomendedActivity)
 	_, err = as.ar.SavedActivity(c, userID, reccomendedActivity)
 	if err != nil {
 		log.Printf("[cordova-activity-service] failed to save activity. Error : %v\n", err)

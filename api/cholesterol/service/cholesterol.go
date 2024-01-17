@@ -12,13 +12,12 @@ import (
 
 	"github.com/Ndraaa15/cordova/api/cholesterol/repository"
 	"github.com/Ndraaa15/cordova/domain"
-	"github.com/Ndraaa15/cordova/utils/activity"
 	"github.com/Ndraaa15/cordova/utils/enum"
 )
 
 type CholesterolServiceImpl interface {
-	CalculateCholesterol(c context.Context, id string, req *domain.CholesterolRequest) (*domain.CholesterolResponse, error)
-	GetCholesterolHistory(c context.Context, id string) (*domain.Cholesterol, error)
+	CalculateCholesterol(c context.Context, userID string, req *domain.CholesterolRequest) (*domain.Cholesterol, error)
+	GetCholesterolHistory(c context.Context, userID string) (*domain.Cholesterol, error)
 }
 
 type CholesterolService struct {
@@ -29,8 +28,8 @@ func NewCholesterolService(cholesterolRepository repository.CholesterolRepositor
 	return &CholesterolService{cholesterolRepository}
 }
 
-func (cs *CholesterolService) CalculateCholesterol(c context.Context, id string, req *domain.CholesterolRequest) (*domain.CholesterolResponse, error) {
-	user, err := cs.cr.GetUserByID(c, id)
+func (cs *CholesterolService) CalculateCholesterol(c context.Context, userID string, req *domain.CholesterolRequest) (*domain.Cholesterol, error) {
+	user, err := cs.cr.GetUserByID(c, userID)
 	if err != nil {
 		log.Printf("[cordova-cholesterol-service] failed to get user from database. Error : %v\n", err)
 		return nil, err
@@ -71,7 +70,7 @@ func (cs *CholesterolService) CalculateCholesterol(c context.Context, id string,
 		return nil, err
 	}
 
-	count, err := cs.cr.CountCholesterolRecord(c, id, int(parsedDate.Month()), parsedDate.Year())
+	count, err := cs.cr.CountCholesterolRecord(c, userID, int(parsedDate.Month()), parsedDate.Year())
 	if err != nil {
 		log.Printf("[cordova-cholesterol-service] failed to count cholesterol record. Error : %v\n", err)
 		return nil, err
@@ -80,7 +79,7 @@ func (cs *CholesterolService) CalculateCholesterol(c context.Context, id string,
 	//Check Count and Create or Update record
 	if count == 0 {
 		cholesterolNew := &domain.CholesterolDB{
-			UserID: id,
+			UserID: userID,
 		}
 
 		cholesterolParsed, err := parseCholesterol(req, cholesterolNew)
@@ -90,14 +89,14 @@ func (cs *CholesterolService) CalculateCholesterol(c context.Context, id string,
 		}
 
 		cholesterolParsed.HeartRiskPercentage = percentage
-		_, err = cs.cr.SavedRecordCholesterol(c, id, cholesterolParsed)
+		_, err = cs.cr.SavedRecordCholesterol(c, userID, cholesterolParsed)
 		if err != nil {
 			log.Printf("[cordova-cholesterol-service] failed to save cholesterol record. Error : %v\n", err)
 			return nil, err
 		}
 
 	} else {
-		cholesterolHistory, err := cs.cr.GetCholesterolHistory(c, id)
+		cholesterolHistory, err := cs.cr.GetCholesterolHistory(c, userID)
 		if err != nil {
 			log.Printf("[cordova-cholesterol-service] failed to get cholesterol history. Error : %v\n", err)
 			return nil, err
@@ -110,39 +109,20 @@ func (cs *CholesterolService) CalculateCholesterol(c context.Context, id string,
 		}
 
 		cholesterolHistory[0].HeartRiskPercentage = percentage
-		_, err = cs.cr.UpdateRecordCholesterol(c, id, cholesterolParsed)
+		_, err = cs.cr.UpdateRecordCholesterol(c, userID, cholesterolParsed)
 		if err != nil {
 			log.Printf("[cordova-cholesterol-service] failed to update cholesterol record. Error : %v\n", err)
 			return nil, err
 		}
 	}
 
-	//Recommendation Activity
-	recommendActivities := activity.GenerateRecommendedActivity(int(req.Cholesterol), 3, true)
-	_, err = cs.cr.SavedActivity(c, id, recommendActivities)
-	if err != nil {
-		log.Printf("[cordova-cholesterol-service] failed to save recomendation activity. Error : %v\n", err)
-		return nil, err
-	}
-
-	cholesterolHistory, err := cs.GetCholesterolHistory(c, id)
+	cholesterolHistory, err := cs.GetCholesterolHistory(c, userID)
 	if err != nil {
 		log.Printf("[cordova-cholesterol-service] failed to get cholesterol history. Error : %v\n", err)
 		return nil, err
 	}
 
-	activities, err := cs.cr.GetAllActivity(c, id)
-	if err != nil {
-		log.Printf("[cordova-cholesterol-service] failed to get all activity. Error : %v\n", err)
-		return nil, err
-	}
-
-	respCheck := &domain.CholesterolResponse{
-		Cholesterol: cholesterolHistory,
-		Activity:    activities,
-	}
-
-	return respCheck, nil
+	return cholesterolHistory, nil
 }
 
 func (cs *CholesterolService) GetCholesterolHistory(c context.Context, id string) (*domain.Cholesterol, error) {

@@ -184,3 +184,10 @@ WHERE
 ORDER BY
     a.id, s.id;
 `
+
+const DeleteActivity = `
+DELETE FROM
+	activities
+WHERE
+	id = :id
+`
