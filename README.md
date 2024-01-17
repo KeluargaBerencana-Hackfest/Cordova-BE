@@ -49,7 +49,7 @@ https://github.com/KeluargaBerencana-Hackfest/Cordova-ML-Deploy
 
 # 📢 Deployment
 <b>Link Deployment </br> </b>
-*On Progress*
+https://cordova-server-999a9c422c84.herokuapp.com
 
 # 📸 Documentation
 <b>Link Documentation (Postman) </br> </b>
