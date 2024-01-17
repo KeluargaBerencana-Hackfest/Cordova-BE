@@ -63,7 +63,6 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 			description         string
 			totalSubActivity    int
 			finishedSubActivity int
-			image               string
 			isDoneActivity      bool
 			createdAtActivity   time.Time
 			updatedAtActivity   time.Time
@@ -76,6 +75,7 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 			stepsSubActivity       []string
 			durationSubActivity    int
 			isDoneSubActivity      bool
+			image                  string
 			createdAtSubActivity   time.Time
 			updatedAtSubActivity   time.Time
 		)
@@ -87,7 +87,6 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 			&description,
 			&totalSubActivity,
 			&finishedSubActivity,
-			&image,
 			&isDoneActivity,
 			&createdAtActivity,
 			&updatedAtActivity,
@@ -99,6 +98,7 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 			pq.Array(&stepsSubActivity),
 			&durationSubActivity,
 			&isDoneSubActivity,
+			&image,
 			&createdAtSubActivity,
 			&updatedAtSubActivity,
 		); err != nil {
@@ -117,6 +117,7 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 					Steps:       stepsSubActivity,
 					Duration:    durationSubActivity,
 					IsDone:      isDoneSubActivity,
+					Image:       image,
 					CreatedAt:   createdAtSubActivity,
 					UpdatedAt:   updatedAtSubActivity,
 				}
@@ -134,7 +135,6 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 				Description:         description,
 				TotalSubActivity:    totalSubActivity,
 				FinishedSubActivity: finishedSubActivity,
-				Image:               image,
 				IsDone:              isDoneActivity,
 				CreatedAt:           createdAtActivity,
 				UpdatedAt:           updatedAtActivity,
@@ -150,6 +150,7 @@ func (ar *ActivityRepository) GetAllActivity(c context.Context, id string) ([]*d
 				Steps:       stepsSubActivity,
 				Duration:    durationSubActivity,
 				IsDone:      isDoneSubActivity,
+				Image:       image,
 				CreatedAt:   createdAtSubActivity,
 				UpdatedAt:   updatedAtSubActivity,
 			}
@@ -211,7 +212,6 @@ func (ar *ActivityRepository) UpdateActivity(c context.Context, activity *domain
 		"id":                    activity.ID,
 		"activity":              activity.Activity,
 		"description":           activity.Description,
-		"image":                 activity.Image,
 		"is_done":               activity.IsDone,
 		"total_sub_activity":    activity.TotalSubActivity,
 		"finished_sub_activity": activity.FinishedSubActivity,
@@ -299,7 +299,6 @@ func (ar *ActivityRepository) SavedActivity(c context.Context, userID string, ac
 			"description":           value.Description,
 			"total_sub_activity":    value.SubActivities.Count,
 			"finished_sub_activity": 0,
-			"image":                 value.Image,
 			"is_done":               false,
 		}
 
@@ -334,6 +333,7 @@ func (ar *ActivityRepository) SavedActivity(c context.Context, userID string, ac
 					"steps":        value.SubActivities.Steps,
 					"duration":     value.SubActivities.Duration,
 					"is_done":      false,
+					"image":        value.SubActivities.Image,
 				}
 
 				var subActivityID int
@@ -364,6 +364,7 @@ func (ar *ActivityRepository) SavedActivity(c context.Context, userID string, ac
 					"steps":        value.SubActivities.Steps,
 					"duration":     value.SubActivities.Duration,
 					"is_done":      false,
+					"image":        value.SubActivities.Image,
 				}
 
 				var subActivityID int
@@ -417,6 +418,7 @@ type SubActivity struct {
 	Steps       pq.StringArray `db:"steps"`
 	Duration    int            `db:"duration"`
 	IsDone      bool           `db:"is_done"`
+	Image       string         `db:"image"`
 	CreatedAt   time.Time      `db:"created_at"`
 	UpdatedAt   time.Time      `db:"updated_at"`
 }
@@ -430,6 +432,7 @@ func (sa *SubActivity) parse() *domain.SubActivityDB {
 		Steps:       sa.Steps,
 		Duration:    sa.Duration,
 		IsDone:      sa.IsDone,
+		Image:       sa.Image,
 		CreatedAt:   sa.CreatedAt,
 		UpdatedAt:   sa.UpdatedAt,
 	}

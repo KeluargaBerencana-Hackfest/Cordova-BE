@@ -8,7 +8,6 @@ SELECT
     a.description,
     a.total_sub_activity,
     a.finished_sub_activity,
-    a.image,
     a.is_done AS activity_is_done,
     a.created_at AS activity_created_at,
     a.updated_at AS activity_updated_at,
@@ -20,6 +19,7 @@ SELECT
 		s.steps,
 		s.duration,
     s.is_done AS sub_activity_is_done,
+		s.image,
     s.created_at AS sub_activity_created_at,
     s.updated_at AS sub_activity_updated_at
 FROM
@@ -49,7 +49,6 @@ SET
 	description = :description,
 	total_sub_activity = :total_sub_activity,
 	finished_sub_activity = :finished_sub_activity,
-	image = :image,
 	is_done = :is_done
 WHERE
 	id = :id
@@ -65,6 +64,7 @@ SELECT
 	steps,
 	duration,
 	is_done,
+	image,
 	created_at,
 	updated_at
 FROM
@@ -81,7 +81,6 @@ SELECT
 	description,
 	total_sub_activity,
 	finished_sub_activity,
-	image,
 	is_done,
 	created_at,
 	updated_at
@@ -123,7 +122,6 @@ INSERT INTO activities (
 	description,
 	total_sub_activity,
 	finished_sub_activity,
-	image,
 	is_done
 ) VALUES (
 		:user_id,
@@ -131,7 +129,6 @@ INSERT INTO activities (
 		:description,
 		:total_sub_activity,
 		:finished_sub_activity,
-		:image,
 		:is_done
 ) RETURNING id
 `
@@ -144,7 +141,8 @@ INSERT INTO sub_activities (
 	ingredients,
 	steps,
 	duration,
-	is_done
+	is_done,
+	image
 ) VALUES (
 		:activity_id,
 		:sub_activity,
@@ -152,7 +150,8 @@ INSERT INTO sub_activities (
 		ARRAY[:ingredients],
 		ARRAY[:steps],
 		:duration,
-		:is_done
+		:is_done,
+		:image
 ) RETURNING id
 `
 

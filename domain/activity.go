@@ -11,6 +11,7 @@ type SubActivityDB struct {
 	Steps       []string  `json:"steps"`
 	Duration    int       `json:"duration"`
 	IsDone      bool      `json:"is_done"`
+	Image       string    `json:"image" db:"image"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -22,7 +23,6 @@ type ActivityDB struct {
 	Description         string                     `json:"description" db:"description"`
 	TotalSubActivity    int                        `json:"total_sub_activity" db:"total_sub_activity"`
 	FinishedSubActivity int                        `json:"finished_sub_activity" db:"finished_sub_activity"`
-	Image               string                     `json:"image" db:"image"`
 	IsDone              bool                       `json:"is_done" db:"is_done"`
 	SubActivities       map[string][]SubActivityDB `json:"sub_activities"`
 	CreatedAt           time.Time                  `json:"created_at" db:"created_at"`
@@ -38,13 +38,13 @@ type SubActivity struct {
 	Duration        int //minutes
 	IsSequential    bool
 	Count           int
+	Image           string
 }
 
 type Activity struct {
 	ID            int
 	NameActivity  string
 	Description   string
-	Image         string
 	Duration      int
 	SubActivities SubActivity
 }

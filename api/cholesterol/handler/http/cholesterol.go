@@ -29,7 +29,7 @@ func (ch *CholesterolHandler) Mount(s *gin.RouterGroup) {
 }
 
 func (ch *CholesterolHandler) CheckCholesterol(ctx *gin.Context) {
-	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	c, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	var (

@@ -55,7 +55,6 @@ CREATE TABLE IF NOT EXISTS activities (
     description TEXT,
     total_sub_activity INTEGER,
     finished_sub_activity INTEGER,
-    image VARCHAR(255),
     is_done BOOLEAN,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -71,6 +70,7 @@ CREATE TABLE IF NOT EXISTS sub_activities (
     steps TEXT[],
     duration INTEGER,
     is_done BOOLEAN,
+    image VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );`
