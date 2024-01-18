@@ -33,7 +33,31 @@
 ![Firebase](https://img.shields.io/badge/Firebase-039BE5?style=for-the-badge&logo=Firebase&logoColor=white)
 ![Google Cloud](https://img.shields.io/badge/GoogleCloud-%234285F4.svg?style=for-the-badge&logo=google-cloud&logoColor=white) ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)
 
-
+# 🦾 Getting Started
+#### Clone repository
+```
+$ git clone https://github.com/KeluargaBerencana-Hackfest/Cordova-BE.git
+```
+#### Install Depedency
+```
+$ go mod download
+```
+#### Copy ENV (don't forget to fill)
+```
+$ cp .env.example .env
+```
+#### Run Server
+```
+go run main.go
+```
+#### Build Server
+```
+go build
+```
+#### Run Binary File
+```
+$ ./cordova
+```
 
 # 💡 Github
 <b>Front End </br> </b>
